@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bảng xếp hạng &amp; kịch bản</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <header>
+    <h1>Bảng xếp hạng &amp; kịch bản</h1>
+    <div class="tabs">
+      <button id="tabReal" class="on">Thực tế</button>
+      <button id="tabScn">Kịch bản dự đoán</button>
+    </div>
+    <div class="tools">
+      <label style="margin:0">Top đi tiếp <input type="number" id="topN" min="0" style="width:56px"></label>
+      <label style="margin:0">Bằng điểm
+        <select id="tiebreak">
+          <option value="diff">Hiệu số ván → ván thắng → đối đầu</option>
+          <option value="h2h">Đối đầu → hiệu số ván → ván thắng</option>
+        </select>
+      </label>
+      <button class="ghost" id="btnExport">Xuất JSON</button>
+      <button class="ghost" id="btnImport">Nhập JSON</button>
+      <input type="file" id="fileImport" accept="application/json" hidden>
+      <button class="danger" id="btnReset">Xóa tất cả</button>
+    </div>
+  </header>
+
+  <!-- ================= TAB THỰC TẾ ================= -->
+  <main id="viewReal">
+    <section>
+      <h2>Bảng xếp hạng thực tế</h2>
+      <div class="scroll">
+        <table id="standings">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th class="name">Đội</th>
+              <th>Trận</th>
+              <th>Thắng</th>
+              <th>Thua</th>
+              <th>Ván thắng</th>
+              <th>Ván thua</th>
+              <th>Hiệu số</th>
+              <th>Điểm</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="msg mute">Thắng trận = 1 điểm, thua = 0. Hiệu số = ván thắng − ván thua. Bảng xếp hạng được tính tự động từ toàn bộ các ván/trận đấu đã diễn ra.</p>
+
+      <details>
+        <summary>Đội &amp; điểm khởi đầu (kết quả các lượt đã đấu)</summary>
+        <p class="msg mute">Nếu chưa nhập từng trận của lượt đi, hãy điền tổng kết lượt đi vào đây. Các trận nhập ở bên phải sẽ cộng thêm vào.</p>
+        <div class="scroll" style="max-height:340px">
+          <table id="baseTable">
+            <thead>
+              <tr>
+                <th class="name">Đội</th>
+                <th>Thắng</th>
+                <th>Thua</th>
+                <th>Ván thắng</th>
+                <th>Ván thua</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div><label>Tên đội mới</label><input id="newTeam" placeholder="VD: Team Flash"></div>
+          <button id="btnAddTeam">Thêm đội</button>
+        </div>
+      </details>
+
+      <details open>
+        <summary>Sinh lịch các trận còn thiếu</summary>
+        <div class="row" style="margin-top:10px">
+          <div><label>Tổng số lượt vòng tròn</label><input type="number" id="legsTotal" min="1"></div>
+          <div><label>Số lượt đã nằm trong điểm khởi đầu</label><input type="number" id="legsDone" min="0"></div>
+          <div><label>Thể thức</label><select id="genBo">
+              <option value="5">BO5</option>
+              <option value="7">BO7</option>
+            </select></div>
+          <button id="btnGen">Sinh lịch</button>
+        </div>
+        <p class="msg mute">Với 9 đội, 2 lượt, đã có 1 lượt trong điểm khởi đầu: sẽ tạo 36 trận chưa đấu (mỗi cặp 1 trận). Ngày giờ để trống, bạn điền sau khi có lịch thật.</p>
+      </details>
+    </section>
+
+    <section>
+      <details id="matchFormDetails" class="match-form-details">
+        <summary id="formSummary">
+          <span id="formTitle">➕ Thêm trận đấu mới</span>
+          <span class="form-toggle-hint">Bấm để mở / đóng</span>
+        </summary>
+        <div class="match-form-body">
+          <div class="row form-team-row">
+            <div class="field-team"><label>Đội A</label><select id="teamA"></select></div>
+            <div class="field-score"><label>Ván A</label><input type="number" id="scoreA" min="0" placeholder="-"></div>
+            <span class="vs">vs</span>
+            <div class="field-score"><label>Ván B</label><input type="number" id="scoreB" min="0" placeholder="-"></div>
+            <div class="field-team"><label>Đội B</label><select id="teamB"></select></div>
+          </div>
+          <div class="row form-meta-row">
+            <div class="field-week"><label>Tuần</label><select id="matchWeek" style="min-width:85px"></select></div>
+            <div class="field-bo"><label>Thể thức</label><select id="bo">
+                <option value="5">BO5 (thắng 3)</option>
+                <option value="7">BO7 (thắng 4)</option>
+              </select></div>
+            <div class="field-date">
+              <label>Ngày (dd/mm/yyyy)</label>
+              <div style="display:flex;align-items:center;gap:4px">
+                <input type="text" id="dateStr" placeholder="dd/mm/yyyy" style="width:100px">
+                <input type="date" id="datePicker" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0">
+                <button type="button" class="ghost sm" id="btnPickDate" title="Chọn từ lịch" style="padding:4px 7px">📅</button>
+              </div>
+            </div>
+            <div class="field-time">
+              <label>Giờ</label>
+              <input type="time" id="timeStr" value="17:00" style="width:85px">
+            </div>
+            <div class="form-actions-row">
+              <button id="btnSave">Lưu trận</button>
+              <button type="button" class="ghost" id="btnClearScore" hidden style="color:var(--warn)" title="Xóa tỉ số, đưa trận về chưa đấu">↺ Xóa tỉ số</button>
+              <button class="ghost" id="btnCancel" hidden>Hủy sửa</button>
+            </div>
+          </div>
+          <div class="msg" id="msg"></div>
+        </div>
+      </details>
+
+      <div class="schedule-header-wrap">
+        <h2>Lịch &amp; kết quả AOG</h2>
+        <span class="tip-inline">💡 Nhập tỉ số trực tiếp tại từng trận, bấm <b>↺</b> để reset về chưa đấu.</span>
+      </div>
+      <div class="row">
+        <div><label>Tuần</label><select id="filterWeek"><option value="all">Tất cả tuần</option></select></div>
+        <div><label>Trạng thái</label><select id="filter">
+            <option value="all">Tất cả</option>
+            <option value="todo">Chưa đấu</option>
+            <option value="done">Đã đấu</option>
+          </select></div>
+        <div><label>Đội</label><select id="filterTeam"></select></div>
+        <button class="danger sm" id="btnClearTodo">Xóa các trận chưa đấu</button>
+      </div>
+      <div class="scroll" id="matchesSchedule"></div>
+      <table id="matches" style="display:none"><tbody></tbody></table>
+    </section>
+  </main>
+
+  <!-- ================= TAB KỊCH BẢN ================= -->
+  <main id="viewScn" class="hide">
+    <section class="full">
+      <div class="row" style="margin:0">
+        <div><label>Kịch bản</label><select id="scSel"></select></div>
+        <button class="ghost" id="scNew">Mới</button>
+        <button class="ghost" id="scDup">Nhân bản</button>
+        <button class="ghost" id="scRen">Đổi tên</button>
+        <button class="danger" id="scDel">Xóa</button>
+        <span class="mute" style="padding-bottom:7px">Kịch bản chỉ thêm kết quả giả định lên các trận chưa đấu, không làm thay đổi dữ liệu thực tế.</span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Bảng xếp hạng theo kịch bản</h2>
+      <div class="scroll">
+        <table id="scStandings">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Δ</th>
+              <th class="name">Đội</th>
+              <th>Còn chưa chọn</th>
+              <th>Điểm</th>
+              <th>Tối đa</th>
+              <th>Hiệu số</th>
+              <th>Top</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="msg mute">Δ = thay đổi hạng so với thực tế. "Tối đa" = điểm hiện có + số trận chưa chọn của đội. Cột "Top" tính theo điểm, bỏ qua tie-break và bỏ qua ràng buộc giữa các trận (nên "chắc suất" và "bị loại" là kết luận an toàn, có thể muộn hơn thực tế).</p>
+    </section>
+
+    <section>
+      <h2>Các trận chưa đấu</h2>
+      <div class="row">
+        <div><label>Tuần</label><select id="scFilterWeek"><option value="all">Tất cả tuần</option></select></div>
+        <div><label>Đội</label><select id="scTeam"></select></div>
+        <button class="ghost sm" id="qWin">Thắng hết</button>
+        <button class="ghost sm" id="qLose">Thua hết</button>
+        <button class="ghost sm" id="qClearTeam">Bỏ chọn đội này</button>
+        <button class="danger sm" id="qClearAll">Bỏ chọn tất cả</button>
+      </div>
+      <div class="msg mute" id="scCount"></div>
+      <div class="scroll" id="scMatchesSchedule"></div>
+      <table id="scMatches" style="display:none"><tbody></tbody></table>
+    </section>
+
+    <section class="full">
+      <h2>Làm việc với AI</h2>
+      <div class="row" style="align-items:start">
+        <div style="flex:1;min-width:300px">
+          <label>1) Sao chép nội dung này, dán cho AI, ghi yêu cầu vào dòng "YÊU CẦU"</label>
+          <textarea id="aiOut" rows="10" readonly></textarea>
+          <div class="row" style="margin-top:8px">
+            <button id="btnBuild">Tạo lại nội dung</button>
+            <button class="ghost" id="btnCopy">Sao chép</button>
+            <span class="msg" id="copyMsg"></span>
+          </div>
+        </div>
+        <div style="flex:1;min-width:300px">
+          <label>2) Dán JSON kịch bản AI trả về</label>
+          <textarea id="aiIn" rows="10" placeholder='{"name":"RRQ thắng 6 trận","picks":[{"n":1,"score":"3-0"}]}'></textarea>
+          <div class="row" style="margin-top:8px">
+            <button id="btnLoadNew">Nạp thành kịch bản mới</button>
+            <button class="ghost" id="btnLoadCur">Nạp vào kịch bản hiện tại</button>
+          </div>
+          <div class="msg" id="aiMsg"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+
+</html>

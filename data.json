@@ -1,0 +1,867 @@
+{
+  "teams": [
+    {
+      "id": "SGP",
+      "name": "Saigon Phantom",
+      "logo": "logo/55px-Saigon_Phantom_2020_allmode.png"
+    },
+    {
+      "id": "FPT",
+      "name": "FPT Polytechnic",
+      "logo": "logo/100px-FPT_Polytechnic.png"
+    },
+    {
+      "id": "FL",
+      "name": "Team Flash",
+      "logo": "logo/56px-Team_Flash_allmode.png"
+    },
+    {
+      "id": "BOOM",
+      "name": "BOOM Esports VN",
+      "logo": "logo/37px-Boom_Esports_allmode.png"
+    },
+    {
+      "id": "1S",
+      "name": "One Star Esports",
+      "logo": "logo/53px-One_Star_Esports_no_text_allmode.png"
+    },
+    {
+      "id": "BOX",
+      "name": "Box Gaming",
+      "logo": "logo/32px-Box_Gaming_2020_allmode.png"
+    },
+    {
+      "id": "GAM",
+      "name": "GAM Esports",
+      "logo": "logo/54px-GAM_Esports_2021_allmode.png"
+    },
+    {
+      "id": "TS",
+      "name": "Team Secret",
+      "logo": "logo/100px-Team_Secret_darkmode.png"
+    },
+    {
+      "id": "RRQ",
+      "name": "Rex Regum Qeon VN",
+      "logo": "logo/70px-Rex_Regum_Qeon_allmode.png"
+    }
+  ],
+  "matches": [
+    {
+      "id": "m_1",
+      "leg": 1,
+      "week": 1,
+      "teamA": "BOOM",
+      "teamB": "SGP",
+      "scoreA": 1,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-08-29T13:00:00"
+    },
+    {
+      "id": "m_2",
+      "leg": 1,
+      "week": 1,
+      "teamA": "GAM",
+      "teamB": "BOX",
+      "scoreA": 1,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-08-29T16:00:00"
+    },
+    {
+      "id": "m_3",
+      "leg": 1,
+      "week": 1,
+      "teamA": "FPT",
+      "teamB": "RRQ",
+      "scoreA": 3,
+      "scoreB": 0,
+      "bo": 5,
+      "date": "2026-08-29T19:30:00"
+    },
+    {
+      "id": "m_4",
+      "leg": 1,
+      "week": 1,
+      "teamA": "TS",
+      "teamB": "FL",
+      "scoreA": 1,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-08-30T13:00:00"
+    },
+    {
+      "id": "m_5",
+      "leg": 1,
+      "week": 1,
+      "teamA": "1S",
+      "teamB": "RRQ",
+      "scoreA": 3,
+      "scoreB": 1,
+      "bo": 5,
+      "date": "2026-08-30T16:00:00"
+    },
+    {
+      "id": "m_6",
+      "leg": 1,
+      "week": 1,
+      "teamA": "SGP",
+      "teamB": "FPT",
+      "scoreA": 3,
+      "scoreB": 2,
+      "bo": 5,
+      "date": "2026-08-30T19:30:00"
+    },
+    {
+      "id": "m_7",
+      "leg": 1,
+      "week": 2,
+      "teamA": "BOX",
+      "teamB": "BOOM",
+      "scoreA": 0,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-09-03T16:00:00"
+    },
+    {
+      "id": "m_8",
+      "leg": 1,
+      "week": 2,
+      "teamA": "GAM",
+      "teamB": "TS",
+      "scoreA": 2,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-09-03T19:30:00"
+    },
+    {
+      "id": "m_9",
+      "leg": 1,
+      "week": 2,
+      "teamA": "RRQ",
+      "teamB": "SGP",
+      "scoreA": 0,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-09-04T13:00:00"
+    },
+    {
+      "id": "m_10",
+      "leg": 1,
+      "week": 2,
+      "teamA": "TS",
+      "teamB": "1S",
+      "scoreA": 1,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-09-04T16:00:00"
+    },
+    {
+      "id": "m_11",
+      "leg": 1,
+      "week": 2,
+      "teamA": "FL",
+      "teamB": "BOX",
+      "scoreA": 3,
+      "scoreB": 0,
+      "bo": 5,
+      "date": "2026-09-04T19:30:00"
+    },
+    {
+      "id": "m_12",
+      "leg": 1,
+      "week": 2,
+      "teamA": "BOOM",
+      "teamB": "GAM",
+      "scoreA": 3,
+      "scoreB": 1,
+      "bo": 5,
+      "date": "2026-09-05T13:00:00"
+    },
+    {
+      "id": "m_13",
+      "leg": 1,
+      "week": 2,
+      "teamA": "TS",
+      "teamB": "SGP",
+      "scoreA": 0,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-09-05T16:00:00"
+    },
+    {
+      "id": "m_14",
+      "leg": 1,
+      "week": 2,
+      "teamA": "1S",
+      "teamB": "FL",
+      "scoreA": 3,
+      "scoreB": 2,
+      "bo": 5,
+      "date": "2026-09-05T19:30:00"
+    },
+    {
+      "id": "m_15",
+      "leg": 1,
+      "week": 2,
+      "teamA": "RRQ",
+      "teamB": "BOOM",
+      "scoreA": 0,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-09-06T13:00:00"
+    },
+    {
+      "id": "m_16",
+      "leg": 1,
+      "week": 2,
+      "teamA": "FPT",
+      "teamB": "BOX",
+      "scoreA": 3,
+      "scoreB": 1,
+      "bo": 5,
+      "date": "2026-09-06T16:00:00"
+    },
+    {
+      "id": "m_17",
+      "leg": 1,
+      "week": 2,
+      "teamA": "SGP",
+      "teamB": "1S",
+      "scoreA": 3,
+      "scoreB": 1,
+      "bo": 5,
+      "date": "2026-09-06T19:30:00"
+    },
+    {
+      "id": "m_18",
+      "leg": 1,
+      "week": 3,
+      "teamA": "BOOM",
+      "teamB": "FPT",
+      "scoreA": 2,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-09-10T16:00:00"
+    },
+    {
+      "id": "m_19",
+      "leg": 1,
+      "week": 3,
+      "teamA": "FL",
+      "teamB": "GAM",
+      "scoreA": 3,
+      "scoreB": 2,
+      "bo": 5,
+      "date": "2026-09-10T19:30:00"
+    },
+    {
+      "id": "m_20",
+      "leg": 1,
+      "week": 3,
+      "teamA": "BOX",
+      "teamB": "TS",
+      "scoreA": 3,
+      "scoreB": 2,
+      "bo": 5,
+      "date": "2026-09-11T13:00:00"
+    },
+    {
+      "id": "m_21",
+      "leg": 1,
+      "week": 3,
+      "teamA": "1S",
+      "teamB": "FPT",
+      "scoreA": 0,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-09-11T16:00:00"
+    },
+    {
+      "id": "m_22",
+      "leg": 1,
+      "week": 3,
+      "teamA": "SGP",
+      "teamB": "GAM",
+      "scoreA": 3,
+      "scoreB": 0,
+      "bo": 5,
+      "date": "2026-09-11T19:30:00"
+    },
+    {
+      "id": "m_23",
+      "leg": 1,
+      "week": 3,
+      "teamA": "BOOM",
+      "teamB": "TS",
+      "scoreA": 3,
+      "scoreB": 0,
+      "bo": 5,
+      "date": "2026-09-12T13:00:00"
+    },
+    {
+      "id": "m_24",
+      "leg": 1,
+      "week": 3,
+      "teamA": "FL",
+      "teamB": "RRQ",
+      "scoreA": 3,
+      "scoreB": 0,
+      "bo": 5,
+      "date": "2026-09-12T16:00:00"
+    },
+    {
+      "id": "m_25",
+      "leg": 1,
+      "week": 3,
+      "teamA": "GAM",
+      "teamB": "FPT",
+      "scoreA": 3,
+      "scoreB": 2,
+      "bo": 5,
+      "date": "2026-09-12T19:30:00"
+    },
+    {
+      "id": "m_26",
+      "leg": 1,
+      "week": 3,
+      "teamA": "BOX",
+      "teamB": "1S",
+      "scoreA": 3,
+      "scoreB": 1,
+      "bo": 5,
+      "date": "2026-09-13T13:00:00"
+    },
+    {
+      "id": "m_27",
+      "leg": 1,
+      "week": 3,
+      "teamA": "TS",
+      "teamB": "RRQ",
+      "scoreA": 3,
+      "scoreB": 2,
+      "bo": 5,
+      "date": "2026-09-13T16:00:00"
+    },
+    {
+      "id": "m_28",
+      "leg": 1,
+      "week": 3,
+      "teamA": "SGP",
+      "teamB": "FL",
+      "scoreA": 3,
+      "scoreB": 0,
+      "bo": 5,
+      "date": "2026-09-13T19:30:00"
+    },
+    {
+      "id": "m_29",
+      "leg": 1,
+      "week": 4,
+      "teamA": "GAM",
+      "teamB": "1S",
+      "scoreA": 3,
+      "scoreB": 1,
+      "bo": 5,
+      "date": "2026-09-18T13:00:00"
+    },
+    {
+      "id": "m_30",
+      "leg": 1,
+      "week": 4,
+      "teamA": "RRQ",
+      "teamB": "BOX",
+      "scoreA": 1,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-09-18T16:00:00"
+    },
+    {
+      "id": "m_31",
+      "leg": 1,
+      "week": 4,
+      "teamA": "FL",
+      "teamB": "BOOM",
+      "scoreA": 3,
+      "scoreB": 0,
+      "bo": 5,
+      "date": "2026-09-18T19:30:00"
+    },
+    {
+      "id": "m_32",
+      "leg": 1,
+      "week": 4,
+      "teamA": "FPT",
+      "teamB": "TS",
+      "scoreA": 3,
+      "scoreB": 0,
+      "bo": 5,
+      "date": "2026-09-19T13:00:00"
+    },
+    {
+      "id": "m_33",
+      "leg": 1,
+      "week": 4,
+      "teamA": "1S",
+      "teamB": "BOOM",
+      "scoreA": 3,
+      "scoreB": 1,
+      "bo": 5,
+      "date": "2026-09-19T16:00:00"
+    },
+    {
+      "id": "m_34",
+      "leg": 1,
+      "week": 4,
+      "teamA": "BOX",
+      "teamB": "SGP",
+      "scoreA": 0,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-09-19T19:30:00"
+    },
+    {
+      "id": "m_35",
+      "leg": 1,
+      "week": 4,
+      "teamA": "RRQ",
+      "teamB": "GAM",
+      "scoreA": 1,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-09-20T16:00:00"
+    },
+    {
+      "id": "m_36",
+      "leg": 1,
+      "week": 4,
+      "teamA": "FPT",
+      "teamB": "FL",
+      "scoreA": 3,
+      "scoreB": 0,
+      "bo": 5,
+      "date": "2026-09-20T19:30:00"
+    },
+    {
+      "id": "m_37",
+      "leg": 2,
+      "week": 6,
+      "teamA": "FPT",
+      "teamB": "GAM",
+      "scoreA": 3,
+      "scoreB": 0,
+      "bo": 5,
+      "date": "2026-10-01T13:00:00"
+    },
+    {
+      "id": "m_38",
+      "leg": 2,
+      "week": 6,
+      "teamA": "FL",
+      "teamB": "1S",
+      "scoreA": 1,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-10-01T16:00:00"
+    },
+    {
+      "id": "m_39",
+      "leg": 2,
+      "week": 6,
+      "teamA": "SGP",
+      "teamB": "TS",
+      "scoreA": 3,
+      "scoreB": 0,
+      "bo": 5,
+      "date": "2026-10-01T19:30:00"
+    },
+    {
+      "id": "m_40",
+      "leg": 2,
+      "week": 6,
+      "teamA": "BOX",
+      "teamB": "RRQ",
+      "scoreA": 3,
+      "scoreB": 1,
+      "bo": 5,
+      "date": "2026-10-02T13:00:00"
+    },
+    {
+      "id": "m_41",
+      "leg": 2,
+      "week": 6,
+      "teamA": "TS",
+      "teamB": "BOOM",
+      "scoreA": 1,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-10-02T16:00:00"
+    },
+    {
+      "id": "m_42",
+      "leg": 2,
+      "week": 6,
+      "teamA": "FL",
+      "teamB": "FPT",
+      "scoreA": 2,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-10-02T19:30:00"
+    },
+    {
+      "id": "m_43",
+      "leg": 2,
+      "week": 6,
+      "teamA": "RRQ",
+      "teamB": "1S",
+      "scoreA": 3,
+      "scoreB": 2,
+      "bo": 5,
+      "date": "2026-10-03T13:00:00"
+    },
+    {
+      "id": "m_44",
+      "leg": 2,
+      "week": 6,
+      "teamA": "BOX",
+      "teamB": "GAM",
+      "scoreA": 0,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-10-03T16:00:00"
+    },
+    {
+      "id": "m_45",
+      "leg": 2,
+      "week": 6,
+      "teamA": "FPT",
+      "teamB": "BOOM",
+      "scoreA": 3,
+      "scoreB": 0,
+      "bo": 5,
+      "date": "2026-10-03T19:30:00"
+    },
+    {
+      "id": "m_46",
+      "leg": 2,
+      "week": 6,
+      "teamA": "TS",
+      "teamB": "GAM",
+      "scoreA": 1,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-10-04T13:00:00"
+    },
+    {
+      "id": "m_47",
+      "leg": 2,
+      "week": 6,
+      "teamA": "1S",
+      "teamB": "SGP",
+      "scoreA": 1,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-10-04T16:00:00"
+    },
+    {
+      "id": "m_48",
+      "leg": 2,
+      "week": 6,
+      "teamA": "RRQ",
+      "teamB": "FL",
+      "scoreA": 0,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-10-04T19:30:00"
+    },
+    {
+      "id": "m_49",
+      "leg": 2,
+      "week": 7,
+      "teamA": "GAM",
+      "teamB": "BOOM",
+      "scoreA": 2,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-10-08T13:00:00"
+    },
+    {
+      "id": "m_51",
+      "leg": 2,
+      "week": 7,
+      "teamA": "FPT",
+      "teamB": "1S",
+      "scoreA": 3,
+      "scoreB": 0,
+      "bo": 5,
+      "date": "2026-10-08T19:30:00"
+    },
+    {
+      "id": "m_52",
+      "leg": 2,
+      "week": 7,
+      "teamA": "RRQ",
+      "teamB": "TS",
+      "scoreA": 2,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-10-09T13:00:00"
+    },
+    {
+      "id": "m_53",
+      "leg": 2,
+      "week": 7,
+      "teamA": "1S",
+      "teamB": "BOX",
+      "scoreA": 0,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-10-09T16:00:00"
+    },
+    {
+      "id": "m_54",
+      "leg": 2,
+      "week": 7,
+      "teamA": "SGP",
+      "teamB": "BOOM",
+      "scoreA": 3,
+      "scoreB": 2,
+      "bo": 5,
+      "date": "2026-10-09T19:30:00"
+    },
+    {
+      "id": "m_55",
+      "leg": 2,
+      "week": 7,
+      "teamA": "GAM",
+      "teamB": "RRQ",
+      "scoreA": 3,
+      "scoreB": 0,
+      "bo": 5,
+      "date": "2026-10-10T13:00:00"
+    },
+    {
+      "id": "m_56",
+      "leg": 2,
+      "week": 7,
+      "teamA": "FL",
+      "teamB": "TS",
+      "scoreA": 2,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-10-10T16:00:00"
+    },
+    {
+      "id": "m_57",
+      "leg": 2,
+      "week": 7,
+      "teamA": "BOX",
+      "teamB": "FPT",
+      "scoreA": 2,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-10-10T19:30:00"
+    },
+    {
+      "id": "m_58",
+      "leg": 2,
+      "week": 7,
+      "teamA": "1S",
+      "teamB": "TS",
+      "scoreA": 3,
+      "scoreB": 1,
+      "bo": 5,
+      "date": "2026-10-11T13:00:00"
+    },
+    {
+      "id": "m_59",
+      "leg": 2,
+      "week": 7,
+      "teamA": "BOOM",
+      "teamB": "RRQ",
+      "scoreA": 3,
+      "scoreB": 0,
+      "bo": 5,
+      "date": "2026-10-11T16:00:00"
+    },
+    {
+      "id": "m_60",
+      "leg": 2,
+      "week": 7,
+      "teamA": "FL",
+      "teamB": "SGP",
+      "scoreA": 1,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-10-11T19:30:00"
+    },
+    {
+      "id": "m_61",
+      "leg": 2,
+      "week": 8,
+      "teamA": "BOX",
+      "teamB": "FL",
+      "scoreA": 2,
+      "scoreB": 3,
+      "bo": 5,
+      "date": "2026-10-15T13:00:00"
+    },
+    {
+      "id": "m_62",
+      "leg": 2,
+      "week": 8,
+      "teamA": "BOOM",
+      "teamB": "1S",
+      "scoreA": 3,
+      "scoreB": 0,
+      "bo": 5,
+      "date": "2026-10-15T16:00:00"
+    },
+    {
+      "id": "m_63",
+      "leg": 2,
+      "week": 8,
+      "teamA": "GAM",
+      "teamB": "SGP",
+      "scoreA": null,
+      "scoreB": null,
+      "bo": 5,
+      "date": "2026-10-15T19:30:00"
+    },
+    {
+      "id": "m_64",
+      "leg": 2,
+      "week": 8,
+      "teamA": "RRQ",
+      "teamB": "FPT",
+      "scoreA": null,
+      "scoreB": null,
+      "bo": 5,
+      "date": "2026-10-16T13:00:00"
+    },
+    {
+      "id": "m_65",
+      "leg": 2,
+      "week": 8,
+      "teamA": "GAM",
+      "teamB": "FL",
+      "scoreA": null,
+      "scoreB": null,
+      "bo": 5,
+      "date": "2026-10-16T16:00:00"
+    },
+    {
+      "id": "m_66",
+      "leg": 2,
+      "week": 8,
+      "teamA": "BOOM",
+      "teamB": "BOX",
+      "scoreA": null,
+      "scoreB": null,
+      "bo": 5,
+      "date": "2026-10-16T19:30:00"
+    },
+    {
+      "id": "m_67",
+      "leg": 2,
+      "week": 8,
+      "teamA": "TS",
+      "teamB": "FPT",
+      "scoreA": null,
+      "scoreB": null,
+      "bo": 5,
+      "date": "2026-10-17T13:00:00"
+    },
+    {
+      "id": "m_68",
+      "leg": 2,
+      "week": 8,
+      "teamA": "SGP",
+      "teamB": "RRQ",
+      "scoreA": null,
+      "scoreB": null,
+      "bo": 5,
+      "date": "2026-10-17T16:00:00"
+    },
+    {
+      "id": "m_69",
+      "leg": 2,
+      "week": 8,
+      "teamA": "BOOM",
+      "teamB": "FL",
+      "scoreA": null,
+      "scoreB": null,
+      "bo": 5,
+      "date": "2026-10-17T19:30:00"
+    },
+    {
+      "id": "m_70",
+      "leg": 2,
+      "week": 8,
+      "teamA": "TS",
+      "teamB": "BOX",
+      "scoreA": null,
+      "scoreB": null,
+      "bo": 5,
+      "date": "2026-10-18T13:00:00"
+    },
+    {
+      "id": "m_71",
+      "leg": 2,
+      "week": 8,
+      "teamA": "1S",
+      "teamB": "GAM",
+      "scoreA": null,
+      "scoreB": null,
+      "bo": 5,
+      "date": "2026-10-18T16:00:00"
+    },
+    {
+      "id": "m_72",
+      "leg": 2,
+      "week": 8,
+      "teamA": "FPT",
+      "teamB": "SGP",
+      "scoreA": null,
+      "scoreB": null,
+      "bo": 5,
+      "date": "2026-10-18T19:30:00"
+    },
+    {
+      "id": "unkwe4bq",
+      "leg": 2,
+      "week": 7,
+      "teamA": "SGP",
+      "teamB": "BOX",
+      "scoreA": 3,
+      "scoreB": 0,
+      "bo": 5,
+      "date": "2026-10-08T16:00:00"
+    }
+  ],
+  "specialWeeks": [
+    {
+      "week": 5,
+      "name": "Chuyển nhượng",
+      "title": "TUẦN 5: CHUYỂN NHƯỢNG GIỮA MÙA",
+      "desc": "Kỳ chuyển nhượng & bổ sung nhân sự giữa mùa giải Đấu Trường Danh Vọng Mùa Đông 2026. Không có trận đấu diễn ra trong tuần này.",
+      "dates": "21/09 – 27/09/2026"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "jkk0w6mu",
+      "name": "kb1",
+      "picks": {}
+    }
+  ],
+  "active": "jkk0w6mu",
+  "settings": {
+    "top": 6,
+    "tiebreak": "diff",
+    "legsTotal": 2,
+    "legsDone": 1,
+    "defaultBo": 5
+  }
+}
