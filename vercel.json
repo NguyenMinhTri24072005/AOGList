@@ -1,22 +1,11 @@
 {
-  "version": 2,
-  "cleanUrls": true,
   "headers": [
     {
-      "source": "/data.json",
+      "source": "/(.*)",
       "headers": [
         {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/api/data",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
         }
       ]
     }
