@@ -3,7 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 const PORT = 3000;
-const DATA_FILE = path.join(__dirname, 'data.json');
+const ROOT_DIR = fs.existsSync(path.join(__dirname, 'index.html')) ? __dirname : process.cwd();
+const DATA_FILE = path.join(ROOT_DIR, 'data.json');
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -76,7 +77,7 @@ const server = http.createServer((req, res) => {
 
   // Phục vụ tệp tĩnh (static files)
   const safePath = decodeURIComponent(pathname);
-  let filePath = path.join(__dirname, safePath === '/' ? 'index.html' : safePath);
+  let filePath = path.join(ROOT_DIR, safePath === '/' ? 'index.html' : safePath);
   const ext = path.extname(filePath).toLowerCase();
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
