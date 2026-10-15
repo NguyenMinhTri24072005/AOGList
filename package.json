@@ -1,0 +1,9 @@
+{
+  "name": "aog-winter-2026",
+  "version": "1.0.0",
+  "description": "Bảng xếp hạng & Dự đoán kịch bản Đấu Trường Danh Vọng Mùa Đông 2026",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
