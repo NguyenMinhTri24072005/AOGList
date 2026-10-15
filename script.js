@@ -119,59 +119,69 @@ let state = fresh();
 let editingId = null;
 let lastJsonString = "";
 
-// Đọc dữ liệu từ Server API hoặc File data.json
-async function loadData() {
+// Đọc dữ liệu từ LocalStorage hoặc Server API / File data.json
+async function loadData(forceServer = false) {
+  // 1. Nếu không ép tải từ server, kiểm tra LocalStorage trước để giữ nguyên tỉ số và kịch bản người dùng đã nhập
+  if (!forceServer) {
+    try {
+      const saved = localStorage.getItem(KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && Array.isArray(parsed.teams) && parsed.matches && parsed.matches.length > 0) {
+          state = normalise(parsed);
+          lastJsonString = JSON.stringify(formatForStorage(state));
+          return false;
+        }
+      }
+    } catch (err) { }
+  }
+
   let loadedData = null;
 
-  // 1. Thử gọi API từ server Node.js (/api/data)
+  // 2. Tải dữ liệu từ API server Node.js (/api/data)
   try {
     const res = await fetch("/api/data", { cache: "no-store" });
     if (res.ok) {
       const text = await res.text();
-      if (text !== lastJsonString) {
+      const parsed = JSON.parse(text);
+      if (parsed && Array.isArray(parsed.teams) && Array.isArray(parsed.matches) && parsed.matches.length > 0) {
+        loadedData = parsed;
         lastJsonString = text;
-        const parsed = JSON.parse(text);
-        if (parsed && Array.isArray(parsed.teams) && Array.isArray(parsed.matches) && parsed.matches.length > 0) {
-          loadedData = parsed;
-        }
-      } else {
-        return false;
       }
     }
   } catch (e) { }
 
-  // 2. Thử fetch trực tiếp tệp data.json tĩnh
+  // 3. Dự phòng fetch trực tiếp tệp data.json tĩnh
   if (!loadedData) {
     try {
       const res = await fetch("data.json", { cache: "no-store" });
       if (res.ok) {
         const text = await res.text();
-        if (text !== lastJsonString) {
+        const parsed = JSON.parse(text);
+        if (parsed && Array.isArray(parsed.teams) && Array.isArray(parsed.matches) && parsed.matches.length > 0) {
+          loadedData = parsed;
           lastJsonString = text;
-          const parsed = JSON.parse(text);
-          if (parsed && Array.isArray(parsed.teams) && Array.isArray(parsed.matches) && parsed.matches.length > 0) {
-            loadedData = parsed;
-          }
         }
       }
     } catch (e) { }
   }
 
-  // 2b. Dự phòng từ data.js (nếu mở file:/// bị CORS chặn fetch)
+  // 4. Dự phòng từ data.js (nếu mở file:/// bị CORS chặn fetch)
   if (!loadedData && typeof window.INITIAL_DATA !== "undefined") {
     if (window.INITIAL_DATA && Array.isArray(window.INITIAL_DATA.teams) && window.INITIAL_DATA.matches) {
       loadedData = window.INITIAL_DATA;
+      lastJsonString = JSON.stringify(loadedData);
     }
   }
 
-  // 3. Nếu có dữ liệu từ file/server -> cập nhật state & localStorage
+  // 5. Nếu có dữ liệu từ file/server -> cập nhật state & localStorage
   if (loadedData) {
     state = normalise(loadedData);
     localStorage.setItem(KEY, JSON.stringify(formatForStorage(state)));
     return true;
   }
 
-  // 4. Dự phòng đọc từ LocalStorage
+  // 6. Dự phòng đọc từ LocalStorage nếu fetch thất bại
   try {
     const saved = localStorage.getItem(KEY);
     if (saved) {
@@ -853,7 +863,16 @@ function readForm() {
   if (rawA !== "" || rawB !== "") {
     if (rawA === "" || rawB === "") return { error: "Nhập đủ tỉ số hai bên, hoặc để trống cả hai." };
     sa = Number(rawA); sb = Number(rawB);
-    if (!validScore(bo, sa, sb)) { const need = needWins(bo); return { error: `BO${bo}: một bên đúng ${need} ván, bên kia từ 0 đến ${need - 1}.` }; }
+    if (!Number.isInteger(sa) || !Number.isInteger(sb) || sa < 0 || sb < 0) {
+      return { error: "Tỉ số ván phải là số nguyên từ 0 trở lên." };
+    }
+    if (sa === sb) {
+      return { error: "Tỉ số hai đội không thể bằng nhau (phải có một đội thắng)." };
+    }
+    const maxWin = needWins(bo);
+    if (Math.max(sa, sb) > maxWin) {
+      return { error: `Thể thức BO${bo} chỉ thi đấu tối đa đến ${maxWin} ván thắng.` };
+    }
   }
 
   // Parse Ngày (ngày/tháng/năm) và Giờ (giờ:phút)
@@ -968,11 +987,55 @@ if ($("btnPickDate") && $("datePicker")) {
   };
 }
 
+// Cập nhật giao diện của 1 thẻ trận đấu mà không cần render lại toàn bộ danh sách (tránh mất focus/bàn phím)
+function updateMatchCardUI(card, m) {
+  if (!card) return;
+  const played = isPlayed(m);
+  const aw = played && m.sa > m.sb;
+  const bw = played && m.sb > m.sa;
+
+  const scoreBox = card.querySelector(".quick-score-box");
+  if (scoreBox) {
+    scoreBox.classList.toggle("played", played);
+  }
+
+  const inputA = card.querySelector('input[data-side="a"]');
+  const inputB = card.querySelector('input[data-side="b"]');
+  if (inputA) inputA.classList.toggle("winner", aw);
+  if (inputB) inputB.classList.toggle("winner", bw);
+
+  const teamLeft = card.querySelector(".team-box.left");
+  const teamRight = card.querySelector(".team-box.right");
+  if (teamLeft) teamLeft.classList.toggle("win", aw);
+  if (teamRight) teamRight.classList.toggle("win", bw);
+
+  // Cập nhật nút reset ↺
+  const actions = card.querySelector(".match-actions");
+  if (actions) {
+    let btnReset = actions.querySelector("button[data-reset]");
+    if (played) {
+      if (!btnReset) {
+        btnReset = document.createElement("button");
+        btnReset.className = "ghost sm";
+        btnReset.setAttribute("data-reset", m.id);
+        btnReset.title = "Reset về chưa đấu (xóa kết quả)";
+        btnReset.style.cssText = "color:#f59e0b;font-weight:700;font-size:12px;padding:2px 6px";
+        btnReset.textContent = "↺";
+        actions.insertBefore(btnReset, actions.firstChild);
+      }
+    } else {
+      if (btnReset) btnReset.remove();
+    }
+  }
+}
+
 if ($("matchesSchedule")) {
   // Focus & select all text on click for immediate typing
   $("matchesSchedule").addEventListener("focusin", e => {
     if (e.target.classList.contains("score-num-input")) {
-      e.target.select();
+      setTimeout(() => {
+        try { e.target.select(); } catch (err) {}
+      }, 50);
     }
   });
 
@@ -990,45 +1053,81 @@ if ($("matchesSchedule")) {
       e.preventDefault();
       if (side === "a" && inputB) {
         inputB.focus();
-        inputB.select();
+        setTimeout(() => { try { inputB.select(); } catch (err) {} }, 50);
       } else if (inputB) {
         inputB.blur();
       }
     } else if (e.key === "ArrowRight" && side === "a") {
       if (inputB && (e.target.selectionStart === e.target.value.length || e.target.value === "")) {
         inputB.focus();
-        inputB.select();
+        setTimeout(() => { try { inputB.select(); } catch (err) {} }, 50);
       }
     } else if (e.key === "ArrowLeft" && side === "b") {
       if (inputA && (e.target.selectionStart === 0 || e.target.value === "")) {
         inputA.focus();
-        inputA.select();
+        setTimeout(() => { try { inputA.select(); } catch (err) {} }, 50);
       }
     } else if (e.key === "Backspace" && side === "b" && e.target.value === "") {
       if (inputA) {
         inputA.focus();
-        inputA.select();
+        setTimeout(() => { try { inputA.select(); } catch (err) {} }, 50);
       }
     }
   });
 
-  // Auto-advance to side B upon entering a single digit into side A
+  // Nhập điểm trực tiếp - phản hồi tức thì và không làm mất focus
   $("matchesSchedule").addEventListener("input", e => {
     if (!e.target.classList.contains("score-num-input")) return;
     const side = e.target.dataset.side;
+    const mid = e.target.dataset.mid;
     const card = e.target.closest(".match-card");
-    if (!card) return;
+    if (!card || !mid) return;
 
-    if (side === "a" && e.target.value.length >= 1) {
-      const inputB = card.querySelector('input[data-side="b"]');
-      if (inputB && inputB.value === "") {
-        inputB.focus();
-        inputB.select();
+    const m = state.matches.find(x => x.id === mid);
+    if (!m) return;
+
+    const inputA = card.querySelector('input[data-side="a"]');
+    const inputB = card.querySelector('input[data-side="b"]');
+    if (!inputA || !inputB) return;
+
+    // Tự động chuyển sang ô B khi đã nhập 1 chữ số vào ô A và ô B đang trống
+    if (side === "a" && e.target.value.length >= 1 && inputB.value === "") {
+      inputB.focus();
+      setTimeout(() => { try { inputB.select(); } catch (err) {} }, 50);
+    }
+
+    const rawA = inputA.value.trim();
+    const rawB = inputB.value.trim();
+
+    if (rawA === "" && rawB === "") {
+      m.sa = null;
+      m.sb = null;
+      m.scoreA = null;
+      m.scoreB = null;
+      updateMatchCardUI(card, m);
+      save();
+      renderStandings();
+      renderBase();
+      return;
+    }
+
+    if (rawA !== "" && rawB !== "") {
+      const nA = parseInt(rawA, 10);
+      const nB = parseInt(rawB, 10);
+      if (!isNaN(nA) && !isNaN(nB) && nA >= 0 && nB >= 0) {
+        m.sa = nA;
+        m.sb = nB;
+        m.scoreA = nA;
+        m.scoreB = nB;
+        updateMatchCardUI(card, m);
+        save();
+        renderStandings();
+        renderBase();
       }
     }
   });
 
-  // Save on change (when an input blurs or Enter is pressed)
+  // Lưu khi blur hoặc Enter
   $("matchesSchedule").addEventListener("change", async e => {
     if (!e.target.classList.contains("score-num-input")) return;
     const mid = e.target.dataset.mid;
@@ -1059,28 +1158,15 @@ if ($("matchesSchedule")) {
         m.scoreA = nA;
         m.scoreB = nB;
       }
-    } else {
-      // Partial entry (one side filled, waiting for the other)
-      if (rawA !== "") {
-        const nA = parseInt(rawA, 10);
-        if (!isNaN(nA)) { m.sa = nA; m.scoreA = nA; }
-      } else { m.sa = null; m.scoreA = null; }
-      if (rawB !== "") {
-        const nB = parseInt(rawB, 10);
-        if (!isNaN(nB)) { m.sb = nB; m.scoreB = nB; }
-      } else { m.sb = null; m.scoreB = null; }
-      return;
     }
-
+    updateMatchCardUI(card, m);
     if (editingId === mid) {
       $("scoreA").value = m.sa !== null ? m.sa : "";
       $("scoreB").value = m.sb !== null ? m.sb : "";
     }
-
-    const currentScroll = window.scrollY;
     await save();
-    renderAll();
-    window.scrollTo(0, currentScroll);
+    renderStandings();
+    renderBase();
   });
 
   $("matchesSchedule").addEventListener("click", async e => {
@@ -1097,10 +1183,17 @@ if ($("matchesSchedule")) {
           $("scoreB").value = "";
           if ($("btnClearScore")) $("btnClearScore").hidden = true;
         }
-        const currentScroll = window.scrollY;
+        const card = e.target.closest(".match-card");
+        if (card) {
+          const inputA = card.querySelector('input[data-side="a"]');
+          const inputB = card.querySelector('input[data-side="b"]');
+          if (inputA) inputA.value = "";
+          if (inputB) inputB.value = "";
+          updateMatchCardUI(card, m);
+        }
         await save();
-        renderAll();
-        window.scrollTo(0, currentScroll);
+        renderStandings();
+        renderBase();
       }
       return;
     }
@@ -1222,7 +1315,7 @@ $("btnReset").onclick = async () => {
   if (confirm("Khôi phục toàn bộ về dữ liệu gốc từ file data.json?")) {
     localStorage.removeItem(KEY);
     lastJsonString = "";
-    await loadData();
+    await loadData(true);
     resetForm();
     initUI();
   }
@@ -1249,11 +1342,31 @@ function initUI() {
 async function init() {
   await loadData();
   initUI();
-  // Tự động kiểm tra đồng bộ mỗi 3 giây nếu file data.json bị thay đổi từ bên ngoài (VS Code, Notepad, ...)
-  setInterval(async () => {
-    const updated = await loadData();
-    if (updated) renderAll();
-  }, 3000);
+  // Tự động kiểm tra đồng bộ CHỈ trên localhost khi người dùng chỉnh sửa data.json qua VS Code/Notepad
+  const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  if (isLocal) {
+    setInterval(async () => {
+      const activeEl = document.activeElement;
+      if (activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "SELECT" || activeEl.tagName === "TEXTAREA")) {
+        return;
+      }
+      try {
+        const res = await fetch("/api/data", { cache: "no-store" });
+        if (res.ok) {
+          const text = await res.text();
+          if (text !== lastJsonString) {
+            lastJsonString = text;
+            const parsed = JSON.parse(text);
+            if (parsed && Array.isArray(parsed.teams) && Array.isArray(parsed.matches) && parsed.matches.length > 0) {
+              state = normalise(parsed);
+              localStorage.setItem(KEY, JSON.stringify(formatForStorage(state)));
+              renderAll();
+            }
+          }
+        }
+      } catch (e) { }
+    }, 3000);
+  }
 }
 
 $("tabScn").addEventListener("click", () => { $("aiOut").value = buildAIText(); });
