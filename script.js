@@ -777,7 +777,10 @@ function renderScenario() {
   const sc = activeSc();
   $("scSel").innerHTML = state.scenarios.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join("");
   $("scSel").value = sc.id;
-  $("scDel").disabled = state.scenarios.length < 2;
+  if ($("scDel")) {
+    $("scDel").disabled = false;
+    $("scDel").title = state.scenarios.length < 2 ? "Đặt lại kịch bản này về ban đầu" : "Xóa kịch bản này";
+  }
 
   const top = Number(state.settings.top) || 0;
   const realRank = {}; compute(realResults()).forEach((r, i) => realRank[r.id] = i + 1);
@@ -975,8 +978,20 @@ $("scDup").onclick = () => {
 };
 $("scRen").onclick = () => { const c = activeSc(), n = prompt("Tên mới:", c.name); if (n && n.trim()) { c.name = n.trim(); saveScenario(); renderScenario(); } };
 $("scDel").onclick = () => {
-  if (state.scenarios.length < 2 || !confirm("Xóa kịch bản này?")) return;
-  state.scenarios = state.scenarios.filter(s => s.id !== state.active); state.active = state.scenarios[0].id; saveScenario(); renderScenario();
+  if (state.scenarios.length < 2) {
+    if (!confirm("Đặt lại kịch bản này về mặc định (xóa hết tỉ số đã dự đoán)?")) return;
+    const sc = activeSc();
+    sc.name = "Kịch bản 1";
+    sc.picks = {};
+    saveScenario();
+    renderScenario();
+    return;
+  }
+  if (!confirm("Xóa kịch bản này?")) return;
+  state.scenarios = state.scenarios.filter(s => s.id !== state.active);
+  state.active = state.scenarios[0].id;
+  saveScenario();
+  renderScenario();
 };
 function quick(mode) {
   const t = $("scTeam").value; if (!t) return; const sc = activeSc();
@@ -1586,10 +1601,17 @@ async function init() {
         const res = await fetch("/api/data", { cache: "no-store" });
         if (res.ok) {
           const text = await res.text();
+          if (!lastJsonString) {
+            lastJsonString = text;
+            return;
+          }
           if (text !== lastJsonString) {
             lastJsonString = text;
             const parsed = JSON.parse(text);
             if (parsed && Array.isArray(parsed.teams) && Array.isArray(parsed.matches) && parsed.matches.length > 0) {
+              // Giữ nguyên kịch bản của người dùng trong LocalStorage khi đồng bộ file server
+              parsed.scenarios = state.scenarios;
+              parsed.active = state.active;
               state = normalise(parsed);
               localStorage.setItem(KEY, JSON.stringify(formatForStorage(state)));
               renderAll();

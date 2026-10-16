@@ -851,15 +851,12 @@
   ],
   "scenarios": [
     {
-      "id": "jkk0w6mu",
-      "name": "kb1",
-      "picks": {
-        "m_70": "3-0",
-        "m_71": "2-3"
-      }
+      "id": "default",
+      "name": "Kịch bản 1",
+      "picks": {}
     }
   ],
-  "active": "jkk0w6mu",
+  "active": "default",
   "settings": {
     "top": 6,
     "tiebreak": "diff",
