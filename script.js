@@ -339,15 +339,95 @@ $("tabScn").onclick = () => setTab("scn");
 /* ---------- Render: thực tế ---------- */
 function renderStandings() {
   const top = Number(state.settings.top) || 0;
-  const tb = $("standings").tBodies[0]; tb.innerHTML = "";
-  compute(realResults()).forEach((r, i) => {
+  const tb = $("standings") ? $("standings").tBodies[0] : null;
+  if (!tb) return;
+  tb.innerHTML = "";
+
+  const selWeek = $("standingsWeek") ? $("standingsWeek").value : "all";
+  const selMode = $("standingsMode") ? $("standingsMode").value : "cumulative";
+  const modeWrap = $("standingsModeWrap");
+  if (modeWrap) {
+    modeWrap.style.display = selWeek === "all" ? "none" : "flex";
+  }
+
+  // Lọc danh sách trận đấu dùng để tính bảng xếp hạng
+  let filteredMatches = [];
+  if (selWeek === "all") {
+    filteredMatches = state.matches.filter(isPlayed);
+  } else {
+    const targetW = Number(selWeek);
+    if (selMode === "single") {
+      filteredMatches = state.matches.filter(m => isPlayed(m) && Number(m.week) === targetW);
+    } else {
+      filteredMatches = state.matches.filter(m => isPlayed(m) && Number(m.week) <= targetW);
+    }
+  }
+
+  const results = filteredMatches.map(m => ({ a: m.a, b: m.b, sa: m.sa, sb: m.sb }));
+  const curRankList = compute(results);
+
+  // Tính biến động thứ hạng (Delta) so với tuần trước đó
+  let prevRankMap = null;
+  const playedWeeks = Array.from(new Set(state.matches.filter(isPlayed).map(m => Number(m.week)).filter(Boolean))).sort((a, b) => a - b);
+
+  if (selMode === "cumulative" || selWeek === "all") {
+    let compareWeek = null;
+    if (selWeek === "all") {
+      if (playedWeeks.length >= 2) {
+        compareWeek = playedWeeks[playedWeeks.length - 2];
+      }
+    } else {
+      const targetW = Number(selWeek);
+      const idx = playedWeeks.indexOf(targetW);
+      if (idx > 0) {
+        compareWeek = playedWeeks[idx - 1];
+      }
+    }
+
+    if (compareWeek !== null) {
+      const prevMatches = state.matches.filter(m => isPlayed(m) && Number(m.week) <= compareWeek).map(m => ({ a: m.a, b: m.b, sa: m.sa, sb: m.sb }));
+      const prevList = compute(prevMatches);
+      prevRankMap = {};
+      prevList.forEach((r, idx) => { prevRankMap[r.id] = idx + 1; });
+    }
+  }
+
+  // Cập nhật tiêu đề phụ & thông báo tuần đang xem
+  const subEl = $("standingsSubtitle");
+  const noticeEl = $("standingsNotice");
+  const noticeText = $("standingsNoticeText");
+
+  if (selWeek === "all") {
+    if (subEl) subEl.textContent = `Toàn bộ giải đấu (Hiện tại • ${results.length} trận đã đấu)`;
+    if (noticeEl) noticeEl.hidden = true;
+  } else {
+    const targetW = Number(selWeek);
+    if (selMode === "single") {
+      if (subEl) subEl.textContent = `Riêng Tuần ${targetW} • (${results.length} trận đã đấu)`;
+      if (noticeText) noticeText.innerHTML = `Đang xem BXH riêng trong <b>Tuần ${targetW}</b> (tổng ${results.length} trận).`;
+    } else {
+      if (subEl) subEl.textContent = `Sau Tuần ${targetW} • Lũy kế (${results.length} trận đã đấu)`;
+      if (noticeText) noticeText.innerHTML = `Đang xem BXH tính đến hết <b>Tuần ${targetW}</b> (tổng ${results.length} trận từ Tuần 1 đến Tuần ${targetW}).`;
+    }
+    if (noticeEl) noticeEl.hidden = false;
+  }
+
+  // Render các hàng trong bảng xếp hạng
+  curRankList.forEach((r, i) => {
     const tr = document.createElement("tr");
     if (top && i + 1 <= top) tr.classList.add("top");
     if (top && i + 1 === top) tr.classList.add("cut");
+
+    let deltaHtml = `<span class="mute">–</span>`;
+    if (prevRankMap && prevRankMap[r.id] !== undefined) {
+      const dl = prevRankMap[r.id] - (i + 1);
+      deltaHtml = dl > 0 ? `<span class="pos">▲${dl}</span>` : dl < 0 ? `<span class="neg">▼${-dl}</span>` : `<span class="mute">–</span>`;
+    }
+
     const d = r.diff > 0 ? `<span class="pos">+${r.diff}</span>` : r.diff < 0 ? `<span class="neg">${r.diff}</span>` : "0";
     const logo = teamLogo(r.id);
     const logoHtml = logo ? `<div class="team-logo-wrap-sm"><img class="team-logo-sm" src="${esc(logo)}" alt="${esc(r.id)}" onerror="this.style.display='none'"></div>` : `<div class="team-logo-wrap-sm"></div>`;
-    tr.innerHTML = `<td>${i + 1}</td><td class="name"><div class="team-cell">${logoHtml}<span>${esc(r.name)}</span></div></td><td>${r.p}</td><td>${r.w}</td><td>${r.l}</td><td>${r.gw}</td><td>${r.gl}</td><td>${d}</td><td class="pts">${r.pts}</td>`;
+    tr.innerHTML = `<td>${i + 1}</td><td>${deltaHtml}</td><td class="name"><div class="team-cell">${logoHtml}<span>${esc(r.name)}</span></div></td><td>${r.p}</td><td>${r.w}</td><td>${r.l}</td><td>${r.gw}</td><td>${r.gl}</td><td>${d}</td><td class="pts">${r.pts}</td>`;
     tb.appendChild(tr);
   });
 }
@@ -372,15 +452,24 @@ function renderWeekSelects() {
   const curF = $("filterWeek") ? $("filterWeek").value : "all";
   const curScF = $("scFilterWeek") ? $("scFilterWeek").value : "all";
   const curMW = $("matchWeek") ? $("matchWeek").value : "1";
+  const curStW = $("standingsWeek") ? $("standingsWeek").value : "all";
 
   let opts = '<option value="all">Tất cả tuần</option>';
   let formOpts = '';
+  let standingsOpts = '<option value="all">Hiện tại (Toàn giải)</option>';
+
   sortedWeeks.forEach(w => {
     const sw = (state.specialWeeks || []).find(s => s.week === w);
     const label = sw ? `Tuần ${w} (${sw.name || "Chuyển nhượng"})` : `Tuần ${w}`;
     opts += `<option value="${w}">${label}</option>`;
     if (!sw) {
       formOpts += `<option value="${w}">Tuần ${w}</option>`;
+      const weekMatches = state.matches.filter(m => Number(m.week) === w);
+      if (weekMatches.length) {
+        const playedCount = state.matches.filter(m => isPlayed(m) && Number(m.week) <= w).length;
+        const countLabel = playedCount > 0 ? ` (${playedCount} trận)` : ` (Chưa đấu)`;
+        standingsOpts += `<option value="${w}">Sau Tuần ${w}${countLabel}</option>`;
+      }
     }
   });
 
@@ -395,6 +484,10 @@ function renderWeekSelects() {
   if ($("matchWeek")) {
     $("matchWeek").innerHTML = formOpts;
     if (weeks.has(+curMW)) $("matchWeek").value = curMW;
+  }
+  if ($("standingsWeek")) {
+    $("standingsWeek").innerHTML = standingsOpts;
+    if (weeks.has(+curStW) || curStW === "all") $("standingsWeek").value = curStW;
   }
 }
 
@@ -1245,6 +1338,26 @@ $("btnClearTodo").onclick = () => {
 };
 $("filter").onchange = renderMatches;
 $("filterTeam").onchange = renderMatches;
+
+if ($("standingsWeek")) $("standingsWeek").onchange = renderStandings;
+if ($("standingsMode")) $("standingsMode").onchange = renderStandings;
+if ($("btnResetStandingsWeek")) {
+  $("btnResetStandingsWeek").onclick = () => {
+    if ($("standingsWeek")) $("standingsWeek").value = "all";
+    renderStandings();
+  };
+}
+if ($("btnJumpToMatchesWeek")) {
+  $("btnJumpToMatchesWeek").onclick = () => {
+    const curW = $("standingsWeek") ? $("standingsWeek").value : "all";
+    if (curW !== "all" && $("filterWeek")) {
+      $("filterWeek").value = curW;
+      renderMatches();
+    }
+    const sched = $("matchesSchedule");
+    if (sched) sched.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+}
 
 /* ---------- Đội & điểm khởi đầu ---------- */
 $("baseTable").addEventListener("change", e => {

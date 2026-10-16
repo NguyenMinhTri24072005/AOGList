@@ -33,12 +33,42 @@
   <!-- ================= TAB THỰC TẾ ================= -->
   <main id="viewReal">
     <section>
-      <h2>Bảng xếp hạng thực tế</h2>
+      <div class="standings-header-wrap">
+        <div class="standings-title-box">
+          <h2>Bảng xếp hạng thực tế</h2>
+          <span id="standingsSubtitle" class="tip-inline">Toàn bộ giải đấu (Hiện tại)</span>
+        </div>
+        <div class="standings-controls-box">
+          <div class="field-inline">
+            <label for="standingsWeek">Thời điểm BXH:</label>
+            <select id="standingsWeek">
+              <option value="all">Hiện tại (Toàn giải)</option>
+            </select>
+          </div>
+          <div class="field-inline" id="standingsModeWrap" style="display:none">
+            <label for="standingsMode">Chế độ xem:</label>
+            <select id="standingsMode">
+              <option value="cumulative">Lũy kế (đến hết tuần này)</option>
+              <option value="single">Chỉ riêng tuần này</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div id="standingsNotice" class="standings-notice" hidden>
+        <span id="standingsNoticeText">Đang xem BXH tính đến hết <b>Tuần 6</b></span>
+        <div class="standings-notice-actions">
+          <button type="button" id="btnJumpToMatchesWeek" class="ghost sm" title="Chuyển bộ lọc danh sách trận sang tuần này">Xem lịch tuần này</button>
+          <button type="button" id="btnResetStandingsWeek" class="ghost sm" title="Quay về bảng xếp hạng hiện tại">↺ Về hiện tại</button>
+        </div>
+      </div>
+
       <div class="scroll">
         <table id="standings">
           <thead>
             <tr>
               <th>#</th>
+              <th title="Biến động thứ hạng so với tuần trước đó">Δ</th>
               <th class="name">Đội</th>
               <th>Trận</th>
               <th>Thắng</th>
@@ -52,7 +82,7 @@
           <tbody></tbody>
         </table>
       </div>
-      <p class="msg mute">Thắng trận = 1 điểm, thua = 0. Hiệu số = ván thắng − ván thua. Bảng xếp hạng được tính tự động từ toàn bộ các ván/trận đấu đã diễn ra.</p>
+      <p class="msg mute">Thắng trận = 1 điểm, thua = 0. Hiệu số = ván thắng − ván thua. Δ = biến động thứ hạng so với tuần trước đó.</p>
 
       <details>
         <summary>Đội &amp; điểm khởi đầu (kết quả các lượt đã đấu)</summary>
