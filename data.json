@@ -859,7 +859,7 @@
   "active": "default",
   "settings": {
     "top": 6,
-    "tiebreak": "diff",
+    "tiebreak": "diff_h2h",
     "legsTotal": 2,
     "legsDone": 1,
     "defaultBo": 5

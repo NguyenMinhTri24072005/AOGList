@@ -43,7 +43,7 @@ function fresh() {
     specialWeeks: DEFAULT_SPECIAL_WEEKS.slice(),
     scenarios: [{ id: sid, name: "Kịch bản 1", picks: {} }],
     active: sid,
-    settings: { top: 6, tiebreak: "diff", legsTotal: 2, legsDone: 1, defaultBo: 5 }
+    settings: { top: 6, tiebreak: "diff_h2h", legsTotal: 2, legsDone: 1, defaultBo: 5 }
   };
 }
 
@@ -84,7 +84,7 @@ function normalise(s) {
   });
 
   s.specialWeeks = Array.isArray(s.specialWeeks) && s.specialWeeks.length ? s.specialWeeks : DEFAULT_SPECIAL_WEEKS.slice();
-  s.settings = Object.assign({ top: 6, tiebreak: "diff", legsTotal: 2, legsDone: 1, defaultBo: 5 }, s.settings || {});
+  s.settings = Object.assign({ top: 6, tiebreak: "diff_h2h", legsTotal: 2, legsDone: 1, defaultBo: 5 }, s.settings || {});
   if (!Array.isArray(s.scenarios) || !s.scenarios.length) s.scenarios = [{ id: uid(), name: "Kịch bản 1", picks: {} }];
   if (!s.scenarios.some(x => x.id === s.active)) s.active = s.scenarios[0].id;
   return s;
@@ -314,19 +314,55 @@ function compute(results) {
   });
   const list = Object.values(row);
   list.forEach(r => { r.p = r.w + r.l; r.diff = r.gw - r.gl; r.pts = r.w; });
+  // Tính thành tích đối đầu giữa x và y
   const h2h = (x, y) => {
     let wx = 0, wy = 0;
+    let gwx = 0, gwy = 0;
     results.forEach(m => {
-      if (m.a === x.id && m.b === y.id) m.sa > m.sb ? wx++ : wy++;
-      else if (m.a === y.id && m.b === x.id) m.sa > m.sb ? wy++ : wx++;
+      if (m.a === x.id && m.b === y.id) {
+        if (m.sa > m.sb) wx++; else if (m.sb > m.sa) wy++;
+        gwx += m.sa; gwy += m.sb;
+      } else if (m.a === y.id && m.b === x.id) {
+        if (m.sa > m.sb) wy++; else if (m.sb > m.sa) wx++;
+        gwx += m.sb; gwy += m.sa;
+      }
     });
-    return wx - wy;
+    // 1. Số trận thắng đối đầu
+    if (wx !== wy) return wx - wy;
+    // 2. Hiệu số ván đối đầu
+    return gwx - gwy;
   };
-  const byDiff = (x, y) => (y.diff - x.diff) || (y.gw - x.gw);
+
   list.sort((x, y) => {
+    // 1. Điểm số (số trận thắng)
     if (y.pts !== x.pts) return y.pts - x.pts;
-    if (state.settings.tiebreak === "h2h") return -h2h(x, y) || byDiff(x, y) || x.name.localeCompare(y.name);
-    return byDiff(x, y) || -h2h(x, y) || x.name.localeCompare(y.name);
+
+    const tb = state.settings.tiebreak || "diff_h2h";
+
+    if (tb === "h2h") {
+      // Đối đầu → Hiệu số ván → Ván thắng → Tên
+      const h = h2h(x, y);
+      if (h !== 0) return -h;
+      if (y.diff !== x.diff) return y.diff - x.diff;
+      if (y.gw !== x.gw) return y.gw - x.gw;
+      return x.name.localeCompare(y.name);
+    }
+
+    if (tb === "diff") {
+      // Hiệu số ván → Ván thắng → Đối đầu → Tên
+      if (y.diff !== x.diff) return y.diff - x.diff;
+      if (y.gw !== x.gw) return y.gw - x.gw;
+      const h = h2h(x, y);
+      if (h !== 0) return -h;
+      return x.name.localeCompare(y.name);
+    }
+
+    // Chuẩn AOG ("diff_h2h"): Điểm → Hiệu số ván → Đối đầu → Ván thắng → Tên
+    if (y.diff !== x.diff) return y.diff - x.diff;
+    const h = h2h(x, y);
+    if (h !== 0) return -h;
+    if (y.gw !== x.gw) return y.gw - x.gw;
+    return x.name.localeCompare(y.name);
   });
   return list;
 }
@@ -917,8 +953,12 @@ function buildAIText() {
   const L = [];
   L.push("Bạn là trợ lý phân tích giải đấu Liên Quân Mobile (vòng tròn tính điểm).");
   L.push("");
-  L.push("LUẬT: mỗi trận BO5 hoặc BO7. Thắng trận = 1 điểm, thua = 0 điểm. Hiệu số = ván thắng - ván thua. " +
-    `Top ${top} đi tiếp. Bằng điểm xếp theo: ${st.tiebreak === "h2h" ? "đối đầu, rồi hiệu số ván, rồi ván thắng" : "hiệu số ván, rồi ván thắng, rồi đối đầu"} (chưa có luật chính thức, giả định).`);
+  const tbDesc = st.tiebreak === "h2h"
+    ? "đối đầu, rồi hiệu số ván, rồi tổng ván thắng"
+    : (st.tiebreak === "diff"
+      ? "hiệu số ván, rồi tổng ván thắng, rồi đối đầu"
+      : "hiệu số ván, rồi đối đầu trực tiếp, rồi tổng số ván thắng (chuẩn AOG)");
+  L.push(`Top ${top} đi tiếp. Bằng điểm xếp theo: ${tbDesc}.`);
   L.push("");
   L.push("BẢNG XẾP HẠNG THỰC TẾ HIỆN TẠI (hạng. đội | thắng-thua | ván thắng-ván thua | hiệu số | điểm):");
   real.forEach((r, i) => L.push(`${i + 1}. ${r.name} | ${r.w}-${r.l} | ${r.gw}-${r.gl} | ${r.diff >= 0 ? "+" : ""}${r.diff} | ${r.pts}đ`));

@@ -19,8 +19,9 @@
       <label style="margin:0">Top đi tiếp <input type="number" id="topN" min="0" style="width:56px"></label>
       <label style="margin:0">Bằng điểm
         <select id="tiebreak">
-          <option value="diff">Hiệu số ván → ván thắng → đối đầu</option>
-          <option value="h2h">Đối đầu → hiệu số ván → ván thắng</option>
+          <option value="diff_h2h">Điểm → Hiệu số ván → Đối đầu → Ván thắng (Chuẩn AOG)</option>
+          <option value="diff">Điểm → Hiệu số ván → Ván thắng → Đối đầu</option>
+          <option value="h2h">Điểm → Đối đầu → Hiệu số ván → Ván thắng</option>
         </select>
       </label>
       <button class="ghost" id="btnExport">Xuất JSON</button>
