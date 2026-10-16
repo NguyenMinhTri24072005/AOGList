@@ -65,8 +65,8 @@ body {
 }
 
 .app-container {
-  max-width: 1720px;
-  width: 98%;
+  max-width: 1840px;
+  width: 99%;
   margin: 0 auto;
   min-height: 100vh;
   display: flex;
@@ -235,9 +235,9 @@ body {
    ========================================================================== */
 main {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.15fr);
-  gap: 20px;
-  padding: 16px 24px;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 16px;
+  padding: 14px 18px;
   flex: 1;
 }
 
@@ -435,8 +435,8 @@ button:disabled {
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 10px 8px;
+  letter-spacing: 0.3px;
+  padding: 9px 5px;
   text-align: center;
   border-bottom: 2px solid var(--line);
   position: sticky;
@@ -446,7 +446,11 @@ button:disabled {
 
 .esports-table thead th.name {
   text-align: left;
-  padding-left: 12px;
+  padding-left: 8px;
+}
+
+.esports-table thead th.th-pts {
+  padding-right: 8px;
 }
 
 .esports-table tbody tr {
@@ -458,7 +462,7 @@ button:disabled {
 }
 
 .esports-table tbody td {
-  padding: 8px 8px;
+  padding: 7px 5px;
   text-align: center;
   border-bottom: 1px solid var(--line-subtle);
   vertical-align: middle;
@@ -466,7 +470,27 @@ button:disabled {
 
 .esports-table tbody td.name {
   text-align: left;
-  padding-left: 12px;
+  padding-left: 8px;
+}
+
+.esports-table tbody td.col-pts {
+  padding-right: 8px;
+}
+
+.col-rank, .th-rank {
+  width: 28px;
+  padding-left: 6px !important;
+  padding-right: 2px !important;
+}
+
+.col-delta, .th-delta {
+  width: 32px;
+  padding-left: 2px !important;
+  padding-right: 2px !important;
+}
+
+.col-stat, .th-stat {
+  padding: 7px 4px !important;
 }
 
 /* Rank Badges */
