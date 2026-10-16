@@ -865,17 +865,7 @@ function renderScenario() {
     byWeek[w][dayKey].items.push({ n, m });
   });
 
-  const scWeeksSet = new Set(Object.keys(byWeek).map(Number));
-  if (!ft && (fw === "all" || (state.specialWeeks || []).some(sw => String(sw.week) === fw))) {
-    (state.specialWeeks || []).forEach(sw => {
-      if (fw === "all" || String(sw.week) === fw) {
-        scWeeksSet.add(sw.week);
-        if (!byWeek[sw.week]) byWeek[sw.week] = {};
-      }
-    });
-  }
-
-  const sortedScWeeks = Array.from(scWeeksSet).sort((a, b) => a - b);
+  const sortedScWeeks = Array.from(new Set(Object.keys(byWeek).map(Number))).sort((a, b) => a - b);
 
   if (!sortedScWeeks.length) {
     container.innerHTML = `<div class="mute" style="text-align:center;padding:24px">Không có trận chưa đấu nào phù hợp bộ lọc.</div>`;
@@ -883,31 +873,8 @@ function renderScenario() {
   }
 
   sortedScWeeks.forEach(w => {
-    const sw = (state.specialWeeks || []).find(s => s.week === Number(w));
     const dayKeys = byWeek[w] ? Object.keys(byWeek[w]).sort() : [];
-
-    if (sw && dayKeys.length === 0) {
-      const specialCard = document.createElement("div");
-      specialCard.className = "week-card special-week-card";
-      specialCard.innerHTML = `
-        <div class="week-header special-week-header">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <span>🔄 ${esc(sw.title || `TUẦN ${w}: CHUYỂN NHƯỢNG GIỮA MÙA`)}</span>
-            <span class="tag warn" style="font-weight:600">Thị trường chuyển nhượng</span>
-          </div>
-          <span class="badge" style="background:#223048;color:#fbbf24;border-color:rgba(245,158,11,0.4)">${esc(sw.dates || "Giữa mùa")}</span>
-        </div>
-        <div class="transfer-banner">
-          <div class="transfer-icon">🔁</div>
-          <div class="transfer-content">
-            <div class="transfer-title">Kỳ chuyển nhượng giữa mùa (Không có trận đấu dự đoán)</div>
-            <div class="transfer-desc">${esc(sw.desc || "Không có trận đấu diễn ra trong tuần này.")}</div>
-          </div>
-        </div>
-      `;
-      container.appendChild(specialCard);
-      return;
-    }
+    if (!dayKeys.length) return;
 
     const weekCard = document.createElement("div");
     weekCard.className = "week-card";
