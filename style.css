@@ -739,10 +739,15 @@ tr.top td:first-child {
   background: rgba(37, 99, 235, 0.12);
   border: 1px solid rgba(59, 130, 246, 0.35);
   border-radius: var(--radius-sm);
-  padding: 8px 12px;
-  margin-top: 10px;
+  padding: 6px 10px;
+  margin-top: 6px;
   font-size: 12px;
   color: #93c5fd;
+}
+
+.standings-notice[hidden],
+.standings-notice.hide {
+  display: none !important;
 }
 
 .notice-content {
@@ -1429,19 +1434,20 @@ tr.top td:first-child {
 
 /* Advanced Drawers */
 .advanced-drawers {
-  margin-top: 14px;
+  margin-top: 8px;
   border-top: 1px dashed var(--line);
-  padding-top: 10px;
+  padding-top: 6px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .drawer-item {
   background: rgba(12, 18, 31, 0.6);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  padding: 8px 12px;
+  padding: 5px 10px;
 }
 
 .drawer-item summary {

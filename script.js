@@ -460,7 +460,10 @@ function renderStandings() {
 
   if (selWeek === "all") {
     if (subEl) subEl.textContent = `Toàn bộ giải đấu (Hiện tại • ${results.length} trận đã đấu)`;
-    if (noticeEl) noticeEl.hidden = true;
+    if (noticeEl) {
+      noticeEl.hidden = true;
+      noticeEl.style.display = "none";
+    }
   } else {
     const targetW = Number(selWeek);
     if (selMode === "single") {
@@ -470,7 +473,10 @@ function renderStandings() {
       if (subEl) subEl.textContent = `Sau Tuần ${targetW} • Lũy kế (${results.length} trận đã đấu)`;
       if (noticeText) noticeText.innerHTML = `Đang xem BXH tính đến hết <b>Tuần ${targetW}</b> (tổng ${results.length} trận từ Tuần 1 đến Tuần ${targetW}).`;
     }
-    if (noticeEl) noticeEl.hidden = false;
+    if (noticeEl) {
+      noticeEl.hidden = false;
+      noticeEl.style.display = "flex";
+    }
   }
 
   // Render các hàng trong bảng xếp hạng
