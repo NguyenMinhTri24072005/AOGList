@@ -851,12 +851,12 @@
   ],
   "scenarios": [
     {
-      "id": "jkk0w6mu",
-      "name": "kb1",
+      "id": "default",
+      "name": "Kịch bản 1",
       "picks": {}
     }
   ],
-  "active": "jkk0w6mu",
+  "active": "default",
   "settings": {
     "top": 6,
     "tiebreak": "diff",

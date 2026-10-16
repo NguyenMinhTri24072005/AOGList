@@ -176,6 +176,18 @@ async function loadData(forceServer = false) {
 
   // 5. Nếu có dữ liệu từ file/server -> cập nhật state & localStorage
   if (loadedData) {
+    // Giữ lại các kịch bản người dùng đã tạo trong LocalStorage nếu có
+    try {
+      const existing = localStorage.getItem(KEY);
+      if (existing) {
+        const parsed = JSON.parse(existing);
+        if (parsed && Array.isArray(parsed.scenarios) && parsed.scenarios.length > 0) {
+          loadedData.scenarios = parsed.scenarios;
+          loadedData.active = parsed.active;
+        }
+      }
+    } catch (err) { }
+
     state = normalise(loadedData);
     localStorage.setItem(KEY, JSON.stringify(formatForStorage(state)));
     return true;
@@ -197,12 +209,25 @@ async function loadData(forceServer = false) {
   return false;
 }
 
-// Ghi dữ liệu trực tiếp vào server (file data.json) khi giao diện thay đổi
+// Lưu kịch bản: CHỈ lưu vào LocalStorage của trình duyệt, không gửi và không ghi vào server / data.json
+function saveScenario() {
+  const exportPayload = formatForStorage(state);
+  localStorage.setItem(KEY, JSON.stringify(exportPayload));
+}
+
+// Ghi dữ liệu giải đấu (kết quả thực tế, đội, trận đấu, cài đặt)
 async function save() {
   const exportPayload = formatForStorage(state);
-  const jsonStr = JSON.stringify(exportPayload, null, 2);
-  lastJsonString = jsonStr;
   localStorage.setItem(KEY, JSON.stringify(exportPayload));
+
+  // Khi lưu vào file server data.json, chỉ lưu dữ liệu giải đấu chính thức, không lưu kịch bản thử nghiệm
+  const serverPayload = {
+    ...exportPayload,
+    scenarios: [{ id: "default", name: "Kịch bản 1", picks: {} }],
+    active: "default"
+  };
+  const jsonStr = JSON.stringify(serverPayload, null, 2);
+  lastJsonString = jsonStr;
 
   try {
     await fetch("/api/data", {
@@ -848,27 +873,27 @@ if ($("scMatchesSchedule")) {
     const id = e.target.dataset.pick; if (!id) return;
     const sc = activeSc();
     if (e.target.value) sc.picks[id] = e.target.value; else delete sc.picks[id];
-    save(); renderScenario();
+    saveScenario(); renderScenario();
   });
 }
 
 if ($("filterWeek")) $("filterWeek").onchange = renderMatches;
 if ($("scFilterWeek")) $("scFilterWeek").onchange = renderScenario;
 $("scTeam").onchange = renderScenario;
-$("scSel").onchange = e => { state.active = e.target.value; save(); renderScenario(); };
+$("scSel").onchange = e => { state.active = e.target.value; saveScenario(); renderScenario(); };
 
 $("scNew").onclick = () => {
   const n = prompt("Tên kịch bản:", "Kịch bản " + (state.scenarios.length + 1)); if (!n) return;
-  const s = { id: uid(), name: n.trim(), picks: {} }; state.scenarios.push(s); state.active = s.id; save(); renderScenario();
+  const s = { id: uid(), name: n.trim(), picks: {} }; state.scenarios.push(s); state.active = s.id; saveScenario(); renderScenario();
 };
 $("scDup").onclick = () => {
   const c = activeSc(), s = { id: uid(), name: c.name + " (bản sao)", picks: Object.assign({}, c.picks) };
-  state.scenarios.push(s); state.active = s.id; save(); renderScenario();
+  state.scenarios.push(s); state.active = s.id; saveScenario(); renderScenario();
 };
-$("scRen").onclick = () => { const c = activeSc(), n = prompt("Tên mới:", c.name); if (n && n.trim()) { c.name = n.trim(); save(); renderScenario(); } };
+$("scRen").onclick = () => { const c = activeSc(), n = prompt("Tên mới:", c.name); if (n && n.trim()) { c.name = n.trim(); saveScenario(); renderScenario(); } };
 $("scDel").onclick = () => {
   if (state.scenarios.length < 2 || !confirm("Xóa kịch bản này?")) return;
-  state.scenarios = state.scenarios.filter(s => s.id !== state.active); state.active = state.scenarios[0].id; save(); renderScenario();
+  state.scenarios = state.scenarios.filter(s => s.id !== state.active); state.active = state.scenarios[0].id; saveScenario(); renderScenario();
 };
 function quick(mode) {
   const t = $("scTeam").value; if (!t) return; const sc = activeSc();
@@ -877,12 +902,12 @@ function quick(mode) {
     const need = needWins(m.bo), teamIsA = m.a === t, win = mode === "win";
     sc.picks[m.id] = (teamIsA === win) ? `${need}-0` : `0-${need}`;
   });
-  save(); renderScenario();
+  saveScenario(); renderScenario();
 }
 $("qWin").onclick = () => quick("win");
 $("qLose").onclick = () => quick("lose");
 $("qClearTeam").onclick = () => quick("clear");
-$("qClearAll").onclick = () => { activeSc().picks = {}; save(); renderScenario(); };
+$("qClearAll").onclick = () => { activeSc().picks = {}; saveScenario(); renderScenario(); };
 
 /* ---------- AI ---------- */
 function buildAIText() {
@@ -937,7 +962,7 @@ function loadAI(intoNew) {
   let target;
   if (intoNew) { target = { id: uid(), name: (data.name || "Kịch bản từ AI").toString().slice(0, 60), picks: {} }; state.scenarios.push(target); state.active = target.id; }
   else target = activeSc();
-  Object.assign(target.picks, newPicks); save(); renderScenario();
+  Object.assign(target.picks, newPicks); saveScenario(); renderScenario();
   const n = Object.keys(newPicks).length;
   out.textContent = `Đã nạp ${n} trận` + (errs.length ? `, bỏ qua ${errs.length}: ${errs.slice(0, 5).join("; ")}` : ".");
   out.className = "msg " + (errs.length ? "err" : "ok");
