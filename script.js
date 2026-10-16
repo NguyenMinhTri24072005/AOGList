@@ -750,9 +750,9 @@ function renderMatches() {
             </div>
           </div>
           <div class="match-actions">
-            ${played ? `<button class="ghost sm" data-reset="${m.id}" title="Reset về chưa đấu (xóa kết quả)" style="color:#f59e0b;font-weight:700;font-size:12px;padding:2px 6px">↺</button>` : ""}
-            <button class="ghost sm" data-edit="${m.id}" title="Chỉnh chi tiết (ngày, đội, thể thức)">Sửa</button>
-            <button class="danger sm" data-rm="${m.id}" title="Xóa trận">×</button>
+            ${played ? `<button class="ghost sm btn-icon btn-reset" data-reset="${m.id}" title="Reset về chưa đấu (xóa kết quả)">↺</button>` : ""}
+            <button class="ghost sm btn-icon btn-edit" data-edit="${m.id}" title="Chỉnh chi tiết (ngày, đội, thể thức)">✎</button>
+            <button class="danger sm btn-icon btn-del" data-rm="${m.id}" title="Xóa trận">×</button>
           </div>
         `;
         matchList.appendChild(card);
@@ -1256,10 +1256,9 @@ function updateMatchCardUI(card, m) {
     if (played) {
       if (!btnReset) {
         btnReset = document.createElement("button");
-        btnReset.className = "ghost sm";
+        btnReset.className = "ghost sm btn-icon btn-reset";
         btnReset.setAttribute("data-reset", m.id);
         btnReset.title = "Reset về chưa đấu (xóa kết quả)";
-        btnReset.style.cssText = "color:#f59e0b;font-weight:700;font-size:12px;padding:2px 6px";
         btnReset.textContent = "↺";
         actions.insertBefore(btnReset, actions.firstChild);
       }
