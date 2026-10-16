@@ -3,262 +3,387 @@
 
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Bảng xếp hạng &amp; kịch bản</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>AOG 2026 • Bảng Xếp Hạng &amp; Kịch Bản Đấu Trường Danh Vọng</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-  <header>
-    <h1>Bảng xếp hạng &amp; kịch bản</h1>
-    <div class="tabs">
-      <button id="tabReal" class="on">Thực tế</button>
-      <button id="tabScn">Kịch bản dự đoán</button>
-    </div>
-    <div class="tools">
-      <label style="margin:0">Top đi tiếp <input type="number" id="topN" min="0" style="width:56px"></label>
-      <label style="margin:0">Bằng điểm
-        <select id="tiebreak">
-          <option value="diff_h2h">Điểm → Hiệu số ván → Đối đầu → Ván thắng (Chuẩn AOG)</option>
-          <option value="diff">Điểm → Hiệu số ván → Ván thắng → Đối đầu</option>
-          <option value="h2h">Điểm → Đối đầu → Hiệu số ván → Ván thắng</option>
-        </select>
-      </label>
-      <button class="ghost" id="btnExport">Xuất JSON</button>
-      <button class="ghost" id="btnImport">Nhập JSON</button>
-      <input type="file" id="fileImport" accept="application/json" hidden>
-      <button class="danger" id="btnReset">Xóa tất cả</button>
-    </div>
-  </header>
-
-  <!-- ================= TAB THỰC TẾ ================= -->
-  <main id="viewReal">
-    <section>
-      <div class="standings-header-wrap">
-        <div class="standings-title-box">
-          <h2>Bảng xếp hạng thực tế</h2>
-          <span id="standingsSubtitle" class="tip-inline">Toàn bộ giải đấu (Hiện tại)</span>
-        </div>
-        <div class="standings-controls-box">
-          <div class="field-inline">
-            <label for="standingsWeek">Thời điểm BXH:</label>
-            <select id="standingsWeek">
-              <option value="all">Hiện tại (Toàn giải)</option>
-            </select>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="brand-bar">
+        <div class="brand-identity">
+          <div class="brand-logo-badge">🏆</div>
+          <div class="brand-text">
+            <h1 class="brand-title">AOG ĐẤU TRƯỜNG DANH VỌNG</h1>
+            <span class="brand-subtitle">Mùa Đông 2026 • Bảng xếp hạng &amp; Mô phỏng kịch bản</span>
           </div>
-          <div class="field-inline" id="standingsModeWrap" style="display:none">
-            <label for="standingsMode">Chế độ xem:</label>
-            <select id="standingsMode">
-              <option value="cumulative">Lũy kế (đến hết tuần này)</option>
-              <option value="single">Chỉ riêng tuần này</option>
+        </div>
+
+        <div class="tabs-segmented">
+          <button id="tabReal" class="on" type="button" title="Bảng xếp hạng &amp; kết quả thực tế giải đấu">
+            <span class="tab-icon">📊</span>
+            <span class="tab-text">Thực tế</span>
+          </button>
+          <button id="tabScn" type="button" title="Mô phỏng và dự đoán các kịch bản tỉ số (lưu trên máy)">
+            <span class="tab-icon">🔮</span>
+            <span class="tab-text">Kịch bản</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="tools-bar">
+        <div class="tool-group tool-settings">
+          <div class="tool-item">
+            <label for="topN" title="Số lượng đội đứng đầu tiến vào vòng Playoffs">Top đi tiếp</label>
+            <input type="number" id="topN" min="0" value="6" style="width:48px">
+          </div>
+          <div class="tool-item">
+            <label for="tiebreak" title="Thứ tự ưu tiên xét xếp hạng khi hai hoặc nhiều đội bằng điểm">Tiêu chí xếp hạng</label>
+            <select id="tiebreak">
+              <option value="diff_h2h">Điểm → Hiệu số → Đối đầu → Ván thắng (Chuẩn AOG)</option>
+              <option value="diff">Điểm → Hiệu số → Ván thắng → Đối đầu</option>
+              <option value="h2h">Điểm → Đối đầu → Hiệu số → Ván thắng</option>
             </select>
           </div>
         </div>
-      </div>
 
-      <div id="standingsNotice" class="standings-notice" hidden>
-        <span id="standingsNoticeText">Đang xem BXH tính đến hết <b>Tuần 6</b></span>
-        <div class="standings-notice-actions">
-          <button type="button" id="btnJumpToMatchesWeek" class="ghost sm" title="Chuyển bộ lọc danh sách trận sang tuần này">Xem lịch tuần này</button>
-          <button type="button" id="btnResetStandingsWeek" class="ghost sm" title="Quay về bảng xếp hạng hiện tại">↺ Về hiện tại</button>
+        <div class="tool-group tool-actions">
+          <button class="ghost sm" id="btnExport" type="button" title="Tải file JSON sao lưu toàn bộ dữ liệu">
+            <span>📥</span> Xuất JSON
+          </button>
+          <button class="ghost sm" id="btnImport" type="button" title="Nạp file JSON dữ liệu đã lưu">
+            <span>📤</span> Nhập JSON
+          </button>
+          <input type="file" id="fileImport" accept="application/json" hidden>
+          <button class="danger sm" id="btnReset" type="button" title="Đặt lại toàn bộ dữ liệu về ban đầu">
+            <span>🗑️</span> Xóa tất cả
+          </button>
         </div>
       </div>
+    </header>
 
-      <div class="scroll">
-        <table id="standings">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th title="Biến động thứ hạng so với tuần trước đó">Δ</th>
-              <th class="name">Đội</th>
-              <th>Trận</th>
-              <th>Thắng</th>
-              <th>Thua</th>
-              <th>Ván thắng</th>
-              <th>Ván thua</th>
-              <th>Hiệu số</th>
-              <th>Điểm</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <p class="msg mute">Thắng trận = 1 điểm, thua = 0. Hiệu số = ván thắng − ván thua. Δ = biến động thứ hạng so với tuần trước đó.</p>
+    <!-- ================= TAB THỰC TẾ ================= -->
+    <main id="viewReal">
+      <!-- CỘT TRÁI: BẢNG XẾP HẠNG -->
+      <section class="card standings-card">
+        <div class="standings-header-wrap">
+          <div class="standings-title-box">
+            <div class="section-title-row">
+              <span class="section-icon">🏆</span>
+              <h2>Bảng xếp hạng</h2>
+              <span class="live-pill">Chính thức</span>
+            </div>
+            <span id="standingsSubtitle" class="tip-inline">Toàn bộ giải đấu (Hiện tại)</span>
+          </div>
+          <div class="standings-controls-box">
+            <div class="field-inline">
+              <label for="standingsWeek">Thời điểm BXH:</label>
+              <select id="standingsWeek">
+                <option value="all">Hiện tại (Toàn giải)</option>
+              </select>
+            </div>
+            <div class="field-inline" id="standingsModeWrap" style="display:none">
+              <label for="standingsMode">Chế độ xem:</label>
+              <select id="standingsMode">
+                <option value="cumulative">Lũy kế (đến hết tuần)</option>
+                <option value="single">Chỉ riêng tuần này</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
-      <details>
-        <summary>Đội &amp; điểm khởi đầu (kết quả các lượt đã đấu)</summary>
-        <p class="msg mute">Nếu chưa nhập từng trận của lượt đi, hãy điền tổng kết lượt đi vào đây. Các trận nhập ở bên phải sẽ cộng thêm vào.</p>
-        <div class="scroll" style="max-height:340px">
-          <table id="baseTable">
+        <div id="standingsNotice" class="standings-notice" hidden>
+          <div class="notice-content">
+            <span class="notice-icon">ℹ️</span>
+            <span id="standingsNoticeText">Đang xem BXH tính đến hết <b>Tuần 6</b></span>
+          </div>
+          <div class="standings-notice-actions">
+            <button type="button" id="btnJumpToMatchesWeek" class="ghost sm" title="Chuyển bộ lọc danh sách trận sang tuần này">📅 Xem lịch tuần này</button>
+            <button type="button" id="btnResetStandingsWeek" class="ghost sm" title="Quay về bảng xếp hạng hiện tại">↺ Về hiện tại</button>
+          </div>
+        </div>
+
+        <div class="table-container scroll">
+          <table id="standings" class="esports-table">
             <thead>
               <tr>
-                <th class="name">Đội</th>
-                <th>Thắng</th>
-                <th>Thua</th>
-                <th>Ván thắng</th>
-                <th>Ván thua</th>
-                <th></th>
+                <th class="th-rank" title="Thứ hạng">#</th>
+                <th class="th-delta" title="Biến động thứ hạng so với tuần trước đó">Δ</th>
+                <th class="th-team name">Đội tuyển</th>
+                <th class="th-stat" title="Tổng số trận đã đấu">Trận</th>
+                <th class="th-stat" title="Số trận thắng">Thắng</th>
+                <th class="th-stat" title="Số trận thua">Thua</th>
+                <th class="th-stat" title="Tổng số ván thắng">V.Thắng</th>
+                <th class="th-stat" title="Tổng số ván thua">V.Thua</th>
+                <th class="th-stat" title="Hiệu số = Ván thắng − Ván thua">Hiệu số</th>
+                <th class="th-stat th-pts" title="Điểm số (1 trận thắng = 1 điểm)">Điểm</th>
               </tr>
             </thead>
             <tbody></tbody>
           </table>
         </div>
-        <div class="row" style="margin-top:10px">
-          <div><label>Tên đội mới</label><input id="newTeam" placeholder="VD: Team Flash"></div>
-          <button id="btnAddTeam">Thêm đội</button>
-        </div>
-      </details>
 
-      <details open>
-        <summary>Sinh lịch các trận còn thiếu</summary>
-        <div class="row" style="margin-top:10px">
-          <div><label>Tổng số lượt vòng tròn</label><input type="number" id="legsTotal" min="1"></div>
-          <div><label>Số lượt đã nằm trong điểm khởi đầu</label><input type="number" id="legsDone" min="0"></div>
-          <div><label>Thể thức</label><select id="genBo">
-              <option value="5">BO5</option>
-              <option value="7">BO7</option>
-            </select></div>
-          <button id="btnGen">Sinh lịch</button>
+        <div class="standings-legend">
+          <div class="legend-item"><span class="legend-badge top4">1-4</span><span>Vòng Playoffs</span></div>
+          <div class="legend-item"><span class="legend-badge top6">5-6</span><span>Trụ hạng</span></div>
+          <div class="legend-item"><span class="legend-dot up">▲</span><span>Tăng hạng</span></div>
+          <div class="legend-item"><span class="legend-dot down">▼</span><span>Giảm hạng</span></div>
         </div>
-        <p class="msg mute">Với 9 đội, 2 lượt, đã có 1 lượt trong điểm khởi đầu: sẽ tạo 36 trận chưa đấu (mỗi cặp 1 trận). Ngày giờ để trống, bạn điền sau khi có lịch thật.</p>
-      </details>
-    </section>
 
-    <section>
-      <details id="matchFormDetails" class="match-form-details">
-        <summary id="formSummary">
-          <span id="formTitle">➕ Thêm trận đấu mới</span>
-          <span class="form-toggle-hint">Bấm để mở / đóng</span>
-        </summary>
-        <div class="match-form-body">
-          <div class="row form-team-row">
-            <div class="field-team"><label>Đội A</label><select id="teamA"></select></div>
-            <div class="field-score"><label>Ván A</label><input type="number" id="scoreA" min="0" placeholder="-"></div>
-            <span class="vs">vs</span>
-            <div class="field-score"><label>Ván B</label><input type="number" id="scoreB" min="0" placeholder="-"></div>
-            <div class="field-team"><label>Đội B</label><select id="teamB"></select></div>
-          </div>
-          <div class="row form-meta-row">
-            <div class="field-week"><label>Tuần</label><select id="matchWeek" style="min-width:85px"></select></div>
-            <div class="field-bo"><label>Thể thức</label><select id="bo">
-                <option value="5">BO5 (thắng 3)</option>
-                <option value="7">BO7 (thắng 4)</option>
-              </select></div>
-            <div class="field-date">
-              <label>Ngày (dd/mm/yyyy)</label>
-              <div style="display:flex;align-items:center;gap:4px">
-                <input type="text" id="dateStr" placeholder="dd/mm/yyyy" style="width:100px">
-                <input type="date" id="datePicker" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0">
-                <button type="button" class="ghost sm" id="btnPickDate" title="Chọn từ lịch" style="padding:4px 7px">📅</button>
+        <!-- Cài đặt nâng cao: Điểm khởi đầu & Sinh lịch -->
+        <div class="advanced-drawers">
+          <details class="drawer-item">
+            <summary>⚙️ Quản lý đội &amp; điểm khởi đầu lượt đi</summary>
+            <p class="msg mute" style="margin-top:6px">Nếu chưa nhập từng trận của lượt đi, hãy điền tổng kết lượt đi vào đây. Các trận nhập ở bên phải sẽ cộng dồn vào.</p>
+            <div class="scroll" style="max-height:260px;margin:8px 0">
+              <table id="baseTable" class="esports-table simple-table">
+                <thead>
+                  <tr>
+                    <th class="name">Đội</th>
+                    <th>Thắng</th>
+                    <th>Thua</th>
+                    <th>V.Thắng</th>
+                    <th>V.Thua</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="row team-add-row" style="margin-top:10px">
+              <div style="flex:1;min-width:140px">
+                <label for="newTeam">Tên đội mới</label>
+                <input id="newTeam" placeholder="VD: Team Flash" style="width:100%">
+              </div>
+              <button id="btnAddTeam" type="button" class="primary sm">Thêm đội</button>
+            </div>
+          </details>
+
+          <details class="drawer-item">
+            <summary>📅 Sinh lịch thi đấu vòng tròn còn thiếu</summary>
+            <div class="row auto-gen-row" style="margin-top:10px">
+              <div><label for="legsTotal">Tổng lượt vòng tròn</label><input type="number" id="legsTotal" min="1" value="2"></div>
+              <div><label for="legsDone">Lượt đã có ở điểm khởi đầu</label><input type="number" id="legsDone" min="0" value="1"></div>
+              <div><label for="genBo">Thể thức</label><select id="genBo">
+                  <option value="5">BO5</option>
+                  <option value="7">BO7</option>
+                </select></div>
+              <button id="btnGen" type="button" class="primary sm">Sinh lịch</button>
+            </div>
+            <p class="msg mute" style="margin-top:6px">Tự động tạo các cặp đấu còn thiếu chưa diễn ra để bạn tiện điền ngày giờ và tỉ số.</p>
+          </details>
+        </div>
+      </section>
+
+      <!-- CỘT PHẢI: LỊCH THI ĐẤU & KẾT QUẢ -->
+      <section class="card schedule-card">
+        <!-- Form Thêm / Chỉnh sửa trận -->
+        <details id="matchFormDetails" class="match-form-details">
+          <summary id="formSummary">
+            <div class="form-summary-left">
+              <span class="form-summary-icon">➕</span>
+              <span id="formTitle">Thêm / Chỉnh sửa trận đấu</span>
+            </div>
+            <span class="form-toggle-hint">Bấm mở/đóng</span>
+          </summary>
+          <div class="match-form-body">
+            <div class="row form-team-row">
+              <div class="field-team">
+                <label for="teamA">Đội A</label>
+                <select id="teamA"></select>
+              </div>
+              <div class="field-score">
+                <label for="scoreA">Ván A</label>
+                <input type="number" id="scoreA" min="0" placeholder="-">
+              </div>
+              <span class="vs">VS</span>
+              <div class="field-score">
+                <label for="scoreB">Ván B</label>
+                <input type="number" id="scoreB" min="0" placeholder="-">
+              </div>
+              <div class="field-team">
+                <label for="teamB">Đội B</label>
+                <select id="teamB"></select>
               </div>
             </div>
-            <div class="field-time">
-              <label>Giờ</label>
-              <input type="time" id="timeStr" value="17:00" style="width:85px">
+            <div class="row form-meta-row">
+              <div class="field-week">
+                <label for="matchWeek">Tuần</label>
+                <select id="matchWeek"></select>
+              </div>
+              <div class="field-bo">
+                <label for="bo">Thể thức</label>
+                <select id="bo">
+                  <option value="5">BO5 (thắng 3)</option>
+                  <option value="7">BO7 (thắng 4)</option>
+                </select>
+              </div>
+              <div class="field-date">
+                <label for="dateStr">Ngày (dd/mm/yyyy)</label>
+                <div class="date-input-group">
+                  <input type="text" id="dateStr" placeholder="dd/mm/yyyy" style="width:100px">
+                  <input type="date" id="datePicker" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0">
+                  <button type="button" class="ghost sm" id="btnPickDate" title="Chọn từ lịch">📅</button>
+                </div>
+              </div>
+              <div class="field-time">
+                <label for="timeStr">Giờ</label>
+                <input type="time" id="timeStr" value="17:00" style="width:85px">
+              </div>
+              <div class="form-actions-row">
+                <button id="btnSave" type="button" class="primary">Lưu trận</button>
+                <button type="button" class="ghost" id="btnClearScore" hidden style="color:var(--warn)" title="Xóa tỉ số, đưa trận về chưa đấu">↺ Xóa tỉ số</button>
+                <button class="ghost" id="btnCancel" type="button" hidden>Hủy sửa</button>
+              </div>
             </div>
-            <div class="form-actions-row">
-              <button id="btnSave">Lưu trận</button>
-              <button type="button" class="ghost" id="btnClearScore" hidden style="color:var(--warn)" title="Xóa tỉ số, đưa trận về chưa đấu">↺ Xóa tỉ số</button>
-              <button class="ghost" id="btnCancel" hidden>Hủy sửa</button>
+            <div class="msg" id="msg"></div>
+          </div>
+        </details>
+
+        <!-- Tiêu đề Lịch & Bộ lọc -->
+        <div class="schedule-header-wrap">
+          <div class="section-title-row">
+            <span class="section-icon">⚔️</span>
+            <h2>Lịch thi đấu &amp; Tỉ số AOG</h2>
+          </div>
+          <span class="tip-inline">💡 Nhập trực tiếp tỉ số vào ô điểm của trận, bấm <b>↺</b> để reset về chưa đấu.</span>
+        </div>
+
+        <div class="filter-bar">
+          <div class="filter-item">
+            <label for="filterWeek">Tuần đấu</label>
+            <select id="filterWeek"><option value="all">Tất cả tuần</option></select>
+          </div>
+          <div class="filter-item">
+            <label for="filter">Trạng thái</label>
+            <select id="filter">
+              <option value="all">Tất cả trận</option>
+              <option value="todo">Chưa đấu</option>
+              <option value="done">Đã có kết quả</option>
+            </select>
+          </div>
+          <div class="filter-item">
+            <label for="filterTeam">Đội tuyển</label>
+            <select id="filterTeam"></select>
+          </div>
+          <button class="danger sm btn-clear-todo" id="btnClearTodo" type="button" title="Xóa toàn bộ các trận chưa đấu khỏi danh sách">
+            <span>🗑️</span> Xóa chưa đấu
+          </button>
+        </div>
+
+        <div class="scroll schedule-container" id="matchesSchedule"></div>
+        <table id="matches" style="display:none"><tbody></tbody></table>
+      </section>
+    </main>
+
+    <!-- ================= TAB KỊCH BẢN ================= -->
+    <main id="viewScn" class="hide">
+      <!-- THANH QUẢN LÝ KỊCH BẢN -->
+      <section class="card full scenario-header-card">
+        <div class="scenario-toolbar">
+          <div class="sc-select-box">
+            <label for="scSel">Kịch bản đang chọn:</label>
+            <select id="scSel" class="sc-select"></select>
+          </div>
+          <div class="sc-actions">
+            <button class="ghost sm" id="scNew" type="button" title="Tạo một kịch bản dự đoán mới">➕ Tạo mới</button>
+            <button class="ghost sm" id="scDup" type="button" title="Sao chép kịch bản hiện tại">📋 Nhân bản</button>
+            <button class="ghost sm" id="scRen" type="button" title="Đổi tên kịch bản này">✏️ Đổi tên</button>
+            <button class="danger sm" id="scDel" type="button" title="Xóa kịch bản này">🗑️ Xóa</button>
+          </div>
+        </div>
+        <div class="scenario-badge-banner">
+          <span class="banner-icon">🔒</span>
+          <span class="banner-text">Kịch bản chỉ lưu trên trình duyệt của bạn (LocalStorage) để tự do thử nghiệm tỉ số mà không ảnh hưởng dữ liệu giải đấu hay người dùng khác.</span>
+        </div>
+      </section>
+
+      <!-- BXH KỊCH BẢN -->
+      <section class="card">
+        <div class="section-title-row" style="margin-bottom:8px">
+          <span class="section-icon">🔮</span>
+          <h2>Bảng xếp hạng theo kịch bản</h2>
+        </div>
+        <div class="table-container scroll">
+          <table id="scStandings" class="esports-table">
+            <thead>
+              <tr>
+                <th class="th-rank">#</th>
+                <th class="th-delta" title="Thay đổi thứ hạng so với thực tế">Δ</th>
+                <th class="th-team name">Đội tuyển</th>
+                <th class="th-stat" title="Số trận chưa chọn kết quả">Còn lại</th>
+                <th class="th-stat th-pts" title="Điểm hiện có theo kịch bản">Điểm</th>
+                <th class="th-stat" title="Điểm tối đa có thể đạt được">Tối đa</th>
+                <th class="th-stat" title="Hiệu số ván thắng - ván thua">Hiệu số</th>
+                <th class="th-stat" title="Khả năng vào Top đi tiếp">Cơ hội</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="msg mute" style="font-size:12px;margin-top:8px">Δ = thay đổi hạng so với thực tế. "Tối đa" = điểm hiện có + số trận chưa chọn. Cột "Cơ hội" tính theo điểm an toàn vào Top.</p>
+      </section>
+
+      <!-- DỰ ĐOÁN TỈ SỐ CÁC TRẬN CHƯA ĐẤU -->
+      <section class="card">
+        <div class="section-title-row" style="margin-bottom:8px">
+          <span class="section-icon">🎯</span>
+          <h2>Dự đoán các trận chưa đấu</h2>
+        </div>
+        <div class="filter-bar">
+          <div class="filter-item">
+            <label for="scFilterWeek">Tuần đấu</label>
+            <select id="scFilterWeek"><option value="all">Tất cả tuần</option></select>
+          </div>
+          <div class="filter-item">
+            <label for="scTeam">Đội cần dự đoán</label>
+            <select id="scTeam"></select>
+          </div>
+          <div class="quick-pick-btns">
+            <button class="ghost sm" id="qWin" type="button" title="Cho đội đang chọn thắng tất cả các trận còn lại">⭐ Thắng hết</button>
+            <button class="ghost sm" id="qLose" type="button" title="Cho đội đang chọn thua tất cả các trận còn lại">❌ Thua hết</button>
+            <button class="ghost sm" id="qClearTeam" type="button" title="Xóa dự đoán của đội này">↺ Bỏ chọn đội</button>
+            <button class="danger sm" id="qClearAll" type="button" title="Xóa tất cả dự đoán trong kịch bản này">↺ Bỏ chọn tất cả</button>
+          </div>
+        </div>
+        <div class="sc-status-pill" id="scCount">Đang tải...</div>
+        <div class="scroll schedule-container" id="scMatchesSchedule"></div>
+        <table id="scMatches" style="display:none"><tbody></tbody></table>
+      </section>
+
+      <!-- TƯƠNG TÁC VỚI AI -->
+      <section class="card full ai-section-card">
+        <div class="section-title-row" style="margin-bottom:12px">
+          <span class="section-icon">🤖</span>
+          <h2>Phân tích kịch bản cùng Trợ lý AI</h2>
+        </div>
+        <div class="ai-grid">
+          <div class="ai-col">
+            <label for="aiOut" class="ai-label">1) Sao chép nội dung này, gửi cho AI kèm yêu cầu của bạn</label>
+            <textarea id="aiOut" rows="9" readonly placeholder="Bấm 'Tạo lại nội dung' để sinh prompt gửi AI..."></textarea>
+            <div class="row" style="margin-top:8px">
+              <button id="btnBuild" type="button" class="primary">Tạo lại nội dung</button>
+              <button class="ghost" id="btnCopy" type="button">📋 Sao chép prompt</button>
+              <span class="msg" id="copyMsg"></span>
             </div>
           </div>
-          <div class="msg" id="msg"></div>
-        </div>
-      </details>
-
-      <div class="schedule-header-wrap">
-        <h2>Lịch &amp; kết quả AOG</h2>
-        <span class="tip-inline">💡 Nhập tỉ số trực tiếp tại từng trận, bấm <b>↺</b> để reset về chưa đấu.</span>
-      </div>
-      <div class="row">
-        <div><label>Tuần</label><select id="filterWeek"><option value="all">Tất cả tuần</option></select></div>
-        <div><label>Trạng thái</label><select id="filter">
-            <option value="all">Tất cả</option>
-            <option value="todo">Chưa đấu</option>
-            <option value="done">Đã đấu</option>
-          </select></div>
-        <div><label>Đội</label><select id="filterTeam"></select></div>
-        <button class="danger sm" id="btnClearTodo">Xóa các trận chưa đấu</button>
-      </div>
-      <div class="scroll" id="matchesSchedule"></div>
-      <table id="matches" style="display:none"><tbody></tbody></table>
-    </section>
-  </main>
-
-  <!-- ================= TAB KỊCH BẢN ================= -->
-  <main id="viewScn" class="hide">
-    <section class="full">
-      <div class="row" style="margin:0">
-        <div><label>Kịch bản</label><select id="scSel"></select></div>
-        <button class="ghost" id="scNew">Mới</button>
-        <button class="ghost" id="scDup">Nhân bản</button>
-        <button class="ghost" id="scRen">Đổi tên</button>
-        <button class="danger" id="scDel">Xóa</button>
-        <span class="mute" style="padding-bottom:7px">Kịch bản chỉ lưu trên trình duyệt của bạn (LocalStorage) để tự do thử nghiệm, không làm thay đổi dữ liệu giải đấu hay dữ liệu máy chủ.</span>
-      </div>
-    </section>
-
-    <section>
-      <h2>Bảng xếp hạng theo kịch bản</h2>
-      <div class="scroll">
-        <table id="scStandings">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Δ</th>
-              <th class="name">Đội</th>
-              <th>Còn chưa chọn</th>
-              <th>Điểm</th>
-              <th>Tối đa</th>
-              <th>Hiệu số</th>
-              <th>Top</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <p class="msg mute">Δ = thay đổi hạng so với thực tế. "Tối đa" = điểm hiện có + số trận chưa chọn của đội. Cột "Top" tính theo điểm, bỏ qua tie-break và bỏ qua ràng buộc giữa các trận (nên "chắc suất" và "bị loại" là kết luận an toàn, có thể muộn hơn thực tế).</p>
-    </section>
-
-    <section>
-      <h2>Các trận chưa đấu</h2>
-      <div class="row">
-        <div><label>Tuần</label><select id="scFilterWeek"><option value="all">Tất cả tuần</option></select></div>
-        <div><label>Đội</label><select id="scTeam"></select></div>
-        <button class="ghost sm" id="qWin">Thắng hết</button>
-        <button class="ghost sm" id="qLose">Thua hết</button>
-        <button class="ghost sm" id="qClearTeam">Bỏ chọn đội này</button>
-        <button class="danger sm" id="qClearAll">Bỏ chọn tất cả</button>
-      </div>
-      <div class="msg mute" id="scCount"></div>
-      <div class="scroll" id="scMatchesSchedule"></div>
-      <table id="scMatches" style="display:none"><tbody></tbody></table>
-    </section>
-
-    <section class="full">
-      <h2>Làm việc với AI</h2>
-      <div class="row" style="align-items:start">
-        <div style="flex:1;min-width:300px">
-          <label>1) Sao chép nội dung này, dán cho AI, ghi yêu cầu vào dòng "YÊU CẦU"</label>
-          <textarea id="aiOut" rows="10" readonly></textarea>
-          <div class="row" style="margin-top:8px">
-            <button id="btnBuild">Tạo lại nội dung</button>
-            <button class="ghost" id="btnCopy">Sao chép</button>
-            <span class="msg" id="copyMsg"></span>
+          <div class="ai-col">
+            <label for="aiIn" class="ai-label">2) Dán kết quả JSON kịch bản do AI trả về vào đây</label>
+            <textarea id="aiIn" rows="9" placeholder='{"name":"RRQ thắng 6 trận","picks":[{"n":1,"score":"3-0"}]}'></textarea>
+            <div class="row" style="margin-top:8px">
+              <button id="btnLoadNew" type="button" class="primary">Nạp kịch bản mới</button>
+              <button class="ghost" id="btnLoadCur" type="button">Nạp vào kịch bản hiện tại</button>
+            </div>
+            <div class="msg" id="aiMsg"></div>
           </div>
         </div>
-        <div style="flex:1;min-width:300px">
-          <label>2) Dán JSON kịch bản AI trả về</label>
-          <textarea id="aiIn" rows="10" placeholder='{"name":"RRQ thắng 6 trận","picks":[{"n":1,"score":"3-0"}]}'></textarea>
-          <div class="row" style="margin-top:8px">
-            <button id="btnLoadNew">Nạp thành kịch bản mới</button>
-            <button class="ghost" id="btnLoadCur">Nạp vào kịch bản hiện tại</button>
-          </div>
-          <div class="msg" id="aiMsg"></div>
-        </div>
-      </div>
-    </section>
-  </main>
+      </section>
+    </main>
+  </div>
 
   <script src="script.js"></script>
 </body>

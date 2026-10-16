@@ -724,8 +724,8 @@
       "week": 8,
       "teamA": "GAM",
       "teamB": "SGP",
-      "scoreA": null,
-      "scoreB": null,
+      "scoreA": 1,
+      "scoreB": 3,
       "bo": 5,
       "date": "2026-10-15T19:30:00"
     },
@@ -735,8 +735,8 @@
       "week": 8,
       "teamA": "RRQ",
       "teamB": "FPT",
-      "scoreA": null,
-      "scoreB": null,
+      "scoreA": 0,
+      "scoreB": 3,
       "bo": 5,
       "date": "2026-10-16T13:00:00"
     },
@@ -746,8 +746,8 @@
       "week": 8,
       "teamA": "GAM",
       "teamB": "FL",
-      "scoreA": null,
-      "scoreB": null,
+      "scoreA": 3,
+      "scoreB": 0,
       "bo": 5,
       "date": "2026-10-16T16:00:00"
     },
@@ -757,8 +757,8 @@
       "week": 8,
       "teamA": "BOOM",
       "teamB": "BOX",
-      "scoreA": null,
-      "scoreB": null,
+      "scoreA": 3,
+      "scoreB": 2,
       "bo": 5,
       "date": "2026-10-16T19:30:00"
     },
@@ -851,15 +851,18 @@
   ],
   "scenarios": [
     {
-      "id": "default",
-      "name": "Kịch bản 1",
-      "picks": {}
+      "id": "jkk0w6mu",
+      "name": "kb1",
+      "picks": {
+        "m_70": "3-0",
+        "m_71": "2-3"
+      }
     }
   ],
-  "active": "default",
+  "active": "jkk0w6mu",
   "settings": {
     "top": 6,
-    "tiebreak": "diff_h2h",
+    "tiebreak": "diff",
     "legsTotal": 2,
     "legsDone": 1,
     "defaultBo": 5

@@ -476,19 +476,50 @@ function renderStandings() {
   // Render các hàng trong bảng xếp hạng
   curRankList.forEach((r, i) => {
     const tr = document.createElement("tr");
-    if (top && i + 1 <= top) tr.classList.add("top");
-    if (top && i + 1 === top) tr.classList.add("cut");
+    const rank = i + 1;
+    const isTopCut = top && rank <= top;
+    if (isTopCut) tr.classList.add("top");
+    if (top && rank === top) tr.classList.add("cut");
 
-    let deltaHtml = `<span class="mute">–</span>`;
+    let rankClass = "rank-norm";
+    if (rank === 1) rankClass = "rank-1";
+    else if (rank === 2) rankClass = "rank-2";
+    else if (rank === 3) rankClass = "rank-3";
+    else if (rank <= 4) rankClass = "rank-4";
+    else if (isTopCut) rankClass = "rank-top";
+
+    let deltaHtml = `<span class="delta-badge delta-same">–</span>`;
     if (prevRankMap && prevRankMap[r.id] !== undefined) {
-      const dl = prevRankMap[r.id] - (i + 1);
-      deltaHtml = dl > 0 ? `<span class="pos">▲${dl}</span>` : dl < 0 ? `<span class="neg">▼${-dl}</span>` : `<span class="mute">–</span>`;
+      const dl = prevRankMap[r.id] - rank;
+      if (dl > 0) deltaHtml = `<span class="delta-badge delta-up">▲${dl}</span>`;
+      else if (dl < 0) deltaHtml = `<span class="delta-badge delta-down">▼${-dl}</span>`;
     }
 
-    const d = r.diff > 0 ? `<span class="pos">+${r.diff}</span>` : r.diff < 0 ? `<span class="neg">${r.diff}</span>` : "0";
+    const diffClass = r.diff > 0 ? "diff-pos" : r.diff < 0 ? "diff-neg" : "diff-zero";
+    const diffSign = r.diff > 0 ? `+${r.diff}` : `${r.diff}`;
     const logo = teamLogo(r.id);
     const logoHtml = logo ? `<div class="team-logo-wrap-sm"><img class="team-logo-sm" src="${esc(logo)}" alt="${esc(r.id)}" onerror="this.style.display='none'"></div>` : `<div class="team-logo-wrap-sm"></div>`;
-    tr.innerHTML = `<td>${i + 1}</td><td>${deltaHtml}</td><td class="name"><div class="team-cell">${logoHtml}<span>${esc(r.name)}</span></div></td><td>${r.p}</td><td>${r.w}</td><td>${r.l}</td><td>${r.gw}</td><td>${r.gl}</td><td>${d}</td><td class="pts">${r.pts}</td>`;
+
+    tr.innerHTML = `
+      <td class="col-rank"><span class="rank-badge ${rankClass}">${rank}</span></td>
+      <td class="col-delta">${deltaHtml}</td>
+      <td class="name col-team">
+        <div class="team-cell">
+          ${logoHtml}
+          <div class="team-meta">
+            <span class="team-name-text">${esc(r.name)}</span>
+            <span class="team-code-pill">${esc(r.id)}</span>
+          </div>
+        </div>
+      </td>
+      <td class="col-stat">${r.p}</td>
+      <td class="col-stat stat-win">${r.w}</td>
+      <td class="col-stat stat-lose">${r.l}</td>
+      <td class="col-stat">${r.gw}</td>
+      <td class="col-stat">${r.gl}</td>
+      <td class="col-stat"><span class="diff-pill ${diffClass}">${diffSign}</span></td>
+      <td class="col-pts"><span class="pts-pill">${r.pts}</span></td>
+    `;
     tb.appendChild(tr);
   });
 }
@@ -674,16 +705,19 @@ function renderMatches() {
         const logoBHtml = logoB ? `<div class="team-logo-wrap"><img class="team-logo" src="${esc(logoB)}" alt="${esc(m.b)}" onerror="this.style.display='none'"></div>` : `<div class="team-logo-wrap"></div>`;
 
         const card = document.createElement("div");
-        card.className = "match-card";
+        card.className = "match-card" + (played ? " played" : "");
         card.setAttribute("data-card-match", m.id);
         card.innerHTML = `
           <div class="match-time-tag">
             <span class="match-time">${timeFmt}</span>
-            <span class="tag ${m.bo === 7 ? "bo7" : ""}">BO${m.bo}</span>
+            <span class="tag ${m.bo === 7 ? "bo7" : "bo5"}">BO${m.bo}</span>
           </div>
           <div class="match-teams">
-            <div class="team-box left ${aw ? "win" : ""}">
-              <span class="team-name" title="${esc(teamName(m.a))}">${esc(teamName(m.a))}</span>
+            <div class="team-box left ${aw ? "win" : (played && bw ? "lose" : "")}">
+              <div class="team-meta">
+                <span class="team-name" title="${esc(teamName(m.a))}">${esc(teamName(m.a))}</span>
+                <span class="team-sub">${esc(m.a)}</span>
+              </div>
               ${logoAHtml}
             </div>
             <div class="score-box quick-score-box ${played ? "played" : ""}">
@@ -707,9 +741,12 @@ function renderMatches() {
                      placeholder="-" 
                      title="Nhập tỉ số ván đội ${esc(m.b)}">
             </div>
-            <div class="team-box right ${bw ? "win" : ""}">
+            <div class="team-box right ${bw ? "win" : (played && aw ? "lose" : "")}">
               ${logoBHtml}
-              <span class="team-name" title="${esc(teamName(m.b))}">${esc(teamName(m.b))}</span>
+              <div class="team-meta">
+                <span class="team-name" title="${esc(teamName(m.b))}">${esc(teamName(m.b))}</span>
+                <span class="team-sub">${esc(m.b)}</span>
+              </div>
             </div>
           </div>
           <div class="match-actions">
@@ -749,9 +786,10 @@ function renderScenario() {
 
   const tb = $("scStandings").tBodies[0]; tb.innerHTML = "";
   list.forEach((r, i) => {
+    const rank = i + 1;
     let status = "";
     if (top) {
-      if (totalUndecided === 0) status = i + 1 <= top ? "ok" : "bad";
+      if (totalUndecided === 0) status = rank <= top ? "ok" : "bad";
       else {
         const others = list.filter(o => o.id !== r.id);
         if (others.filter(o => o.max >= r.pts).length < top) status = "ok";
@@ -759,16 +797,46 @@ function renderScenario() {
         else status = "open";
       }
     }
-    const label = { ok: "Vào top", bad: "Bị loại", open: "Còn cơ hội" }[status] || "";
-    const dl = realRank[r.id] - (i + 1);
-    const delta = dl > 0 ? `<span class="pos">▲${dl}</span>` : dl < 0 ? `<span class="neg">▼${-dl}</span>` : `<span class="mute">–</span>`;
-    const d = r.diff > 0 ? `<span class="pos">+${r.diff}</span>` : r.diff < 0 ? `<span class="neg">${r.diff}</span>` : "0";
-    const tr = document.createElement("tr");
-    if (top && i + 1 <= top) tr.classList.add("top");
-    if (top && i + 1 === top) tr.classList.add("cut");
+    const label = { ok: "✔ Vào Top " + top, bad: "✖ Bị loại", open: "⚡ Còn cơ hội" }[status] || "";
+    const tagClass = { ok: "tag-playoff", bad: "tag-out", open: "tag-open" }[status] || "";
+
+    const dl = realRank[r.id] - rank;
+    const deltaHtml = dl > 0 ? `<span class="delta-badge delta-up">▲${dl}</span>` : dl < 0 ? `<span class="delta-badge delta-down">▼${-dl}</span>` : `<span class="delta-badge delta-same">–</span>`;
+
+    let rankClass = "rank-norm";
+    if (rank === 1) rankClass = "rank-1";
+    else if (rank === 2) rankClass = "rank-2";
+    else if (rank === 3) rankClass = "rank-3";
+    else if (rank <= 4) rankClass = "rank-4";
+    else if (top && rank <= top) rankClass = "rank-top";
+
+    const diffClass = r.diff > 0 ? "diff-pos" : r.diff < 0 ? "diff-neg" : "diff-zero";
+    const diffSign = r.diff > 0 ? `+${r.diff}` : `${r.diff}`;
     const logo = teamLogo(r.id);
     const logoHtml = logo ? `<div class="team-logo-wrap-sm"><img class="team-logo-sm" src="${esc(logo)}" alt="${esc(r.id)}" onerror="this.style.display='none'"></div>` : `<div class="team-logo-wrap-sm"></div>`;
-    tr.innerHTML = `<td>${i + 1}</td><td>${delta}</td><td class="name"><div class="team-cell">${logoHtml}<span>${esc(r.name)}</span></div></td><td>${r.rem}</td><td class="pts">${r.pts}</td><td>${r.max}</td><td>${d}</td><td>${label ? `<span class="tag ${status}">${label}</span>` : ""}</td>`;
+
+    const tr = document.createElement("tr");
+    if (top && rank <= top) tr.classList.add("top");
+    if (top && rank === top) tr.classList.add("cut");
+
+    tr.innerHTML = `
+      <td class="col-rank"><span class="rank-badge ${rankClass}">${rank}</span></td>
+      <td class="col-delta">${deltaHtml}</td>
+      <td class="name col-team">
+        <div class="team-cell">
+          ${logoHtml}
+          <div class="team-meta">
+            <span class="team-name-text">${esc(r.name)}</span>
+            <span class="team-code-pill">${esc(r.id)}</span>
+          </div>
+        </div>
+      </td>
+      <td class="col-stat">${r.rem}</td>
+      <td class="col-pts"><span class="pts-pill">${r.pts}</span></td>
+      <td class="col-stat stat-max">${r.max}</td>
+      <td class="col-stat"><span class="diff-pill ${diffClass}">${diffSign}</span></td>
+      <td class="col-status">${label ? `<span class="tag ${tagClass}">${label}</span>` : ""}</td>
+    `;
     tb.appendChild(tr);
   });
 
@@ -873,23 +941,29 @@ function renderScenario() {
         const logoBHtml = logoB ? `<div class="team-logo-wrap"><img class="team-logo" src="${esc(logoB)}" alt="${esc(m.b)}" onerror="this.style.display='none'"></div>` : `<div class="team-logo-wrap"></div>`;
 
         const card = document.createElement("div");
-        card.className = "match-card";
+        card.className = "match-card" + (hasPick ? " sc-picked-card" : "");
         card.innerHTML = `
           <div class="match-time-tag">
             <span class="match-time">#${n} • ${timeFmt}</span>
-            <span class="tag ${m.bo === 7 ? "bo7" : ""}">BO${m.bo}</span>
+            <span class="tag ${m.bo === 7 ? "bo7" : "bo5"}">BO${m.bo}</span>
           </div>
           <div class="match-teams">
-            <div class="team-box left ${aw ? "win" : ""}">
-              <span class="team-name" title="${esc(teamName(m.a))}">${esc(teamName(m.a))}</span>
+            <div class="team-box left ${aw ? "win" : (hasPick && bw ? "lose" : "")}">
+              <div class="team-meta">
+                <span class="team-name" title="${esc(teamName(m.a))}">${esc(teamName(m.a))}</span>
+                <span class="team-sub">${esc(m.a)}</span>
+              </div>
               ${logoAHtml}
             </div>
-            <div class="score-box" style="min-width:116px">
-              <select data-pick="${m.id}" style="padding:3px 6px;font-size:12px;width:100%;cursor:pointer">${opts}</select>
+            <div class="score-box sc-pick-box ${hasPick ? "picked" : ""}">
+              <select data-pick="${m.id}">${opts}</select>
             </div>
-            <div class="team-box right ${bw ? "win" : ""}">
+            <div class="team-box right ${bw ? "win" : (hasPick && aw ? "lose" : "")}">
               ${logoBHtml}
-              <span class="team-name" title="${esc(teamName(m.b))}">${esc(teamName(m.b))}</span>
+              <div class="team-meta">
+                <span class="team-name" title="${esc(teamName(m.b))}">${esc(teamName(m.b))}</span>
+                <span class="team-sub">${esc(m.b)}</span>
+              </div>
             </div>
           </div>
         `;
@@ -1152,6 +1226,8 @@ function updateMatchCardUI(card, m) {
   const aw = played && m.sa > m.sb;
   const bw = played && m.sb > m.sa;
 
+  card.classList.toggle("played", played);
+
   const scoreBox = card.querySelector(".quick-score-box");
   if (scoreBox) {
     scoreBox.classList.toggle("played", played);
@@ -1164,8 +1240,14 @@ function updateMatchCardUI(card, m) {
 
   const teamLeft = card.querySelector(".team-box.left");
   const teamRight = card.querySelector(".team-box.right");
-  if (teamLeft) teamLeft.classList.toggle("win", aw);
-  if (teamRight) teamRight.classList.toggle("win", bw);
+  if (teamLeft) {
+    teamLeft.classList.toggle("win", aw);
+    teamLeft.classList.toggle("lose", played && bw);
+  }
+  if (teamRight) {
+    teamRight.classList.toggle("win", bw);
+    teamRight.classList.toggle("lose", played && aw);
+  }
 
   // Cập nhật nút reset ↺
   const actions = card.querySelector(".match-actions");
