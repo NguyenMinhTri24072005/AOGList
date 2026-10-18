@@ -1571,8 +1571,7 @@ function renderPlayoffCard(m) {
           </div>
         </div>
         <div class="playoff-score-wrap">
-          <input type="text" inputmode="numeric" maxlength="1" pattern="[0-4]" class="playoff-score-input ${scoreClass}" data-m="${m.key}" data-side="${side}" id="playoff_score_${m.key}_${side}" value="${scoreVal}" placeholder="-">
-          <button type="button" class="btn-quick-win" data-win-m="${m.key}" data-win-side="${side}" title="Chọn đội này thắng 4 ván (BO7)">4★</button>
+          <input type="number" min="0" max="4" class="score-num-input playoff-score-input ${scoreClass}" data-m="${m.key}" data-side="${side}" id="playoff_score_${m.key}_${side}" value="${scoreVal}" placeholder="-" title="Nhập số ván thắng">
         </div>
       </div>
     `;
@@ -1697,7 +1696,7 @@ function drawPlayoffLines() {
 
   let paths = "";
 
-  // 1. M1 & M2 -> M6 (Nhánh thắng Bán kết)
+  // 1. M1 & M2 -> M6 (Nhánh thắng: Bán kết -> Chung kết nhánh thắng)
   const mid1 = (m1.right + m6.left) / 2;
   paths += `
     <path d="M ${m1.right} ${m1.centerY} H ${mid1} V ${m6.slotAY} H ${m6.left}" stroke="#38bdf8" stroke-width="2.5" fill="none" opacity="0.9" filter="url(#glow-blue)" />
@@ -1708,23 +1707,7 @@ function drawPlayoffLines() {
     <circle cx="${m6.left}" cy="${m6.slotBY}" r="3.5" fill="#38bdf8" />
   `;
 
-  // 2. M1 Loser -> M3 Slot B (Rơi xuống nhánh thua)
-  const dropX1 = m1.right + 14;
-  paths += `
-    <path d="M ${m1.right} ${m1.slotBY} H ${dropX1} V ${m3.slotBY} H ${m3.left}" stroke="#a855f7" stroke-width="2" stroke-dasharray="5,4" fill="none" opacity="0.8" filter="url(#glow-purple)" />
-    <circle cx="${m1.right}" cy="${m1.slotBY}" r="3" fill="#a855f7" />
-    <circle cx="${m3.left}" cy="${m3.slotBY}" r="3" fill="#a855f7" />
-  `;
-
-  // 3. M2 Loser -> M4 Slot B (Rơi xuống nhánh thua)
-  const dropX2 = m2.right + 14;
-  paths += `
-    <path d="M ${m2.right} ${m2.slotBY} H ${dropX2} V ${m4.slotBY} H ${m4.left}" stroke="#a855f7" stroke-width="2" stroke-dasharray="5,4" fill="none" opacity="0.8" filter="url(#glow-purple)" />
-    <circle cx="${m2.right}" cy="${m2.slotBY}" r="3" fill="#a855f7" />
-    <circle cx="${m4.left}" cy="${m4.slotBY}" r="3" fill="#a855f7" />
-  `;
-
-  // 4. M3 & M4 -> M5 (Nhánh thua Bán kết)
+  // 2. M3 & M4 -> M5 (Nhánh thua: Vòng 1 -> Bán kết nhánh thua)
   const mid2 = (m3.right + m5.left) / 2;
   paths += `
     <path d="M ${m3.right} ${m3.centerY} H ${mid2} V ${m5.slotAY} H ${m5.left}" stroke="#38bdf8" stroke-width="2.5" fill="none" opacity="0.9" filter="url(#glow-blue)" />
@@ -1735,33 +1718,39 @@ function drawPlayoffLines() {
     <circle cx="${m5.left}" cy="${m5.slotBY}" r="3.5" fill="#38bdf8" />
   `;
 
-  // 5. M6 Loser -> M7 Slot A (Rơi xuống Chung kết nhánh thua)
-  const dropX6 = (m6.right + m7.left) / 2;
+  // 3. M5 Winner -> M7 Slot B (Thắng bán kết nhánh thua tiến vào Chung kết nhánh thua)
+  const mid57 = (m5.right + m7.left) / 2;
   paths += `
-    <path d="M ${m6.right} ${m6.slotBY} H ${dropX6} V ${m7.slotAY} H ${m7.left}" stroke="#a855f7" stroke-width="2" stroke-dasharray="5,4" fill="none" opacity="0.85" filter="url(#glow-purple)" />
-    <circle cx="${m6.right}" cy="${m6.slotBY}" r="3.5" fill="#a855f7" />
-    <circle cx="${m7.left}" cy="${m7.slotAY}" r="3.5" fill="#a855f7" />
-  `;
-
-  // 6. M5 Winner -> M7 Slot B (Thắng tiến vào Chung kết nhánh thua)
-  paths += `
-    <path d="M ${m5.right} ${m5.centerY} H ${m7.left}" stroke="#38bdf8" stroke-width="2.5" fill="none" opacity="0.9" filter="url(#glow-blue)" />
+    <path d="M ${m5.right} ${m5.centerY} H ${mid57} V ${m7.slotBY} H ${m7.left}" stroke="#38bdf8" stroke-width="2.5" fill="none" opacity="0.9" filter="url(#glow-blue)" />
     <circle cx="${m5.right}" cy="${m5.centerY}" r="3.5" fill="#38bdf8" />
     <circle cx="${m7.left}" cy="${m7.slotBY}" r="3.5" fill="#38bdf8" />
   `;
 
-  // 7. M6 Winner & M7 Winner -> M8 Grand Final
-  const midGF = (m6.right + m8.left) / 2;
+  // 4. M6 Loser -> M7 Slot A (Thua Chung kết nhánh thắng rơi xuống Chung kết nhánh thua)
+  const dropX6 = (m6.right + m7.left) / 2 - 12;
   paths += `
-    <path d="M ${m6.right} ${m6.slotAY} H ${midGF} V ${m8.slotAY} H ${m8.left}" stroke="#fbbf24" stroke-width="2.5" fill="none" opacity="0.95" filter="url(#glow-gold)" />
-    <path d="M ${m7.right} ${m7.centerY} H ${midGF} V ${m8.slotBY} H ${m8.left}" stroke="#38bdf8" stroke-width="2.5" fill="none" opacity="0.9" filter="url(#glow-blue)" />
+    <path d="M ${m6.right} ${m6.slotBY} H ${dropX6} V ${m7.slotAY} H ${m7.left}" stroke="#a855f7" stroke-width="2.5" stroke-dasharray="6,4" fill="none" opacity="0.85" filter="url(#glow-purple)" />
+    <circle cx="${m6.right}" cy="${m6.slotBY}" r="3.5" fill="#a855f7" />
+    <circle cx="${m7.left}" cy="${m7.slotAY}" r="3.5" fill="#a855f7" />
+  `;
+
+  // 5. M6 Winner -> M8 Slot A (Vô địch nhánh thắng tiến vào Chung kết tổng)
+  const mid68 = (m6.right + m8.left) / 2;
+  paths += `
+    <path d="M ${m6.right} ${m6.slotAY} H ${mid68} V ${m8.slotAY} H ${m8.left}" stroke="#fbbf24" stroke-width="2.5" fill="none" opacity="0.95" filter="url(#glow-gold)" />
     <circle cx="${m6.right}" cy="${m6.slotAY}" r="3.5" fill="#fbbf24" />
-    <circle cx="${m7.right}" cy="${m7.centerY}" r="3.5" fill="#38bdf8" />
     <circle cx="${m8.left}" cy="${m8.slotAY}" r="3.5" fill="#fbbf24" />
+  `;
+
+  // 6. M7 Winner -> M8 Slot B (Vô địch nhánh thua tiến vào Chung kết tổng)
+  const mid78 = (m7.right + m8.left) / 2;
+  paths += `
+    <path d="M ${m7.right} ${m7.centerY} H ${mid78} V ${m8.slotBY} H ${m8.left}" stroke="#38bdf8" stroke-width="2.5" fill="none" opacity="0.9" filter="url(#glow-blue)" />
+    <circle cx="${m7.right}" cy="${m7.centerY}" r="3.5" fill="#38bdf8" />
     <circle cx="${m8.left}" cy="${m8.slotBY}" r="3.5" fill="#38bdf8" />
   `;
 
-  // 8. M8 Winner -> Champion Box (nếu đã có vô địch)
+  // 7. M8 Winner -> Champion Box (nếu đã có vô địch)
   const champBox = wrap.querySelector(".champion-podium-card.champion-active");
   if (champBox) {
     const cb = champBox.getBoundingClientRect();
@@ -1905,13 +1894,9 @@ function updatePlayoffDownstreamDOM() {
     updatePlayoffCardDOM(card, k);
   });
 
-  const podiumWrap = document.querySelector(".champion-podium-card");
+  const podiumWrap = $("playoffChampionWrap");
   if (podiumWrap) {
-    if (r.champion && !podiumWrap.classList.contains("champion-active")) {
-      renderPlayoff();
-    } else if (!r.champion && podiumWrap.classList.contains("champion-active")) {
-      renderPlayoff();
-    }
+    podiumWrap.innerHTML = renderChampionShowcase(r);
   }
 }
 
@@ -1983,6 +1968,8 @@ function renderPlayoff() {
             <span class="col-subtitle">07/11 • BO7</span>
           </div>
 
+          <div class="bracket-col-spacer"></div>
+
           <div class="bracket-group">
             <div class="group-label lower-label"><span>🔥</span> TRANH VÉ GRAND FINAL</div>
             <div class="group-cards">
@@ -2009,7 +1996,9 @@ function renderPlayoff() {
           </div>
 
           <!-- CHAMPION SHOWCASE -->
-          ${renderChampionShowcase(r)}
+          <div id="playoffChampionWrap">
+            ${renderChampionShowcase(r)}
+          </div>
         </div>
       </div>
     </div>
@@ -2038,28 +2027,40 @@ function setupPlayoffListeners() {
       if (!e.target.classList.contains("playoff-score-input")) return;
       const mKey = e.target.dataset.m;
       const side = e.target.dataset.side;
+      const card = e.target.closest(".playoff-card");
+      if (!card || !mKey) return;
 
+      const inputA = card.querySelector('.playoff-score-input[data-side="a"]');
+      const inputB = card.querySelector('.playoff-score-input[data-side="b"]');
+      if (!inputA || !inputB) return;
+
+      // Giới hạn giá trị 0-4
       let val = e.target.value.replace(/[^0-4]/g, "");
       if (val.length > 1) val = val.slice(-1);
       e.target.value = val;
-      const num = val === "" ? null : Number(val);
-
-      if (!state.playoff.matches[mKey]) state.playoff.matches[mKey] = { sa: null, sb: null };
-      if (side === "a") state.playoff.matches[mKey].sa = num;
-      else state.playoff.matches[mKey].sb = num;
-
-      save();
 
       // Tự động nhảy sang ô B nếu vừa gõ ô A và ô B còn trống
-      const card = e.target.closest(".playoff-card");
-      if (side === "a" && val !== "" && card) {
-        const inputB = card.querySelector('.playoff-score-input[data-side="b"]');
-        if (inputB && inputB.value === "") {
-          inputB.focus();
-          try { inputB.select(); } catch(err){}
-        }
+      if (side === "a" && val !== "" && inputB.value === "") {
+        inputB.focus();
+        setTimeout(() => { try { inputB.select(); } catch (err) {} }, 50);
       }
 
+      const rawA = inputA.value.trim();
+      const rawB = inputB.value.trim();
+
+      if (!state.playoff.matches[mKey]) state.playoff.matches[mKey] = { sa: null, sb: null };
+
+      if (rawA === "" && rawB === "") {
+        state.playoff.matches[mKey].sa = null;
+        state.playoff.matches[mKey].sb = null;
+      } else {
+        const na = rawA !== "" ? Number(rawA) : null;
+        const nb = rawB !== "" ? Number(rawB) : null;
+        state.playoff.matches[mKey].sa = (na !== null && !isNaN(na) && na >= 0 && na <= 4) ? na : null;
+        state.playoff.matches[mKey].sb = (nb !== null && !isNaN(nb) && nb >= 0 && nb <= 4) ? nb : null;
+      }
+
+      save();
       updatePlayoffCardDOM(card, mKey);
       updatePlayoffDownstreamDOM();
       drawPlayoffLines();
@@ -2078,61 +2079,33 @@ function setupPlayoffListeners() {
         e.preventDefault();
         if (side === "a" && inputB) {
           inputB.focus();
-          try { inputB.select(); } catch(err){}
+          setTimeout(() => { try { inputB.select(); } catch (err) {} }, 50);
         } else if (inputB) {
           inputB.blur();
         }
-      } else if (e.key === "ArrowRight" && side === "a" && inputB) {
+      } else if ((e.key === "ArrowDown" || e.key === "ArrowRight") && side === "a" && inputB) {
         inputB.focus();
-        try { inputB.select(); } catch(err){}
-      } else if (e.key === "ArrowLeft" && side === "b" && inputA) {
+        setTimeout(() => { try { inputB.select(); } catch (err) {} }, 50);
+      } else if ((e.key === "ArrowUp" || e.key === "ArrowLeft") && side === "b" && inputA) {
         inputA.focus();
-        try { inputA.select(); } catch(err){}
+        setTimeout(() => { try { inputA.select(); } catch (err) {} }, 50);
+      } else if (e.key === "Backspace" && side === "b" && e.target.value === "" && inputA) {
+        inputA.focus();
+        setTimeout(() => { try { inputA.select(); } catch (err) {} }, 50);
       }
     });
 
     // 3. Tự động bôi đen khi click/focus
     bracket.addEventListener("focusin", e => {
       if (e.target.classList.contains("playoff-score-input")) {
-        try { e.target.select(); } catch(err){}
-      }
-    });
-
-    // 4. Khi rời ô nhập điểm (blur), render lại toàn bộ để cập nhật bục vinh danh
-    bracket.addEventListener("focusout", e => {
-      if (e.target.classList.contains("playoff-score-input")) {
         setTimeout(() => {
-          const activeEl = document.activeElement;
-          if (!activeEl || !activeEl.classList.contains("playoff-score-input")) {
-            renderPlayoff();
-          }
-        }, 150);
+          try { e.target.select(); } catch (err) {}
+        }, 50);
       }
     });
 
-    // 5. Nút thắng nhanh 4★ và Reset riêng lẻ
+    // 4. Nút Reset riêng lẻ từng trận ↺
     bracket.addEventListener("click", e => {
-      const btnWin = e.target.closest(".btn-quick-win");
-      if (btnWin) {
-        const mKey = btnWin.dataset.winM;
-        const side = btnWin.dataset.winSide;
-        if (!state.playoff.matches[mKey]) state.playoff.matches[mKey] = { sa: null, sb: null };
-        if (side === "a") {
-          state.playoff.matches[mKey].sa = 4;
-          if (state.playoff.matches[mKey].sb === null || state.playoff.matches[mKey].sb >= 4) {
-            state.playoff.matches[mKey].sb = 0;
-          }
-        } else {
-          state.playoff.matches[mKey].sb = 4;
-          if (state.playoff.matches[mKey].sa === null || state.playoff.matches[mKey].sa >= 4) {
-            state.playoff.matches[mKey].sa = 0;
-          }
-        }
-        save();
-        renderPlayoff();
-        return;
-      }
-
       const btnReset = e.target.closest(".btn-m-reset");
       if (btnReset) {
         const mKey = btnReset.dataset.reset;
@@ -2145,7 +2118,7 @@ function setupPlayoffListeners() {
       }
     });
 
-    // 6. Thay đổi đội trong ô
+    // 5. Thay đổi đội trong ô
     bracket.addEventListener("change", e => {
       if (e.target.classList.contains("playoff-select")) {
         const slot = e.target.dataset.slot;

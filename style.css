@@ -1827,6 +1827,11 @@ textarea {
   gap: 16px;
 }
 
+.bracket-col-spacer {
+  height: 254px;
+  flex-shrink: 0;
+}
+
 .bracket-col-header {
   display: flex;
   flex-direction: column;
@@ -2117,7 +2122,7 @@ textarea {
 .playoff-score-wrap {
   display: flex;
   align-items: center;
-  gap: 3px;
+  justify-content: flex-end;
   flex-shrink: 0;
 }
 
@@ -2135,31 +2140,17 @@ textarea {
   outline: none;
   transition: all 0.15s ease;
   padding: 0;
+  box-sizing: border-box;
 }
 
-.btn-quick-win {
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 800;
-  background: rgba(59, 130, 246, 0.15);
-  border: 1px solid rgba(59, 130, 246, 0.35);
-  color: #60a5fa;
-  border-radius: 4px;
-  padding: 2px 5px;
-  height: 28px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.playoff-score-input::-webkit-outer-spin-button,
+.playoff-score-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
-.btn-quick-win:hover {
-  background: var(--acc-gradient);
-  color: #fff;
-  border-color: #3b82f6;
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+.playoff-score-input[type=number] {
+  -moz-appearance: textfield;
 }
 
 .playoff-score-input:focus {
@@ -2168,6 +2159,7 @@ textarea {
   background: #0d1527;
 }
 
+.playoff-score-input.winner,
 .playoff-score-input.winner-score {
   background: rgba(16, 185, 129, 0.2);
   border-color: #10b981;
