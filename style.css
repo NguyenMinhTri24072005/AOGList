@@ -2068,6 +2068,15 @@ textarea {
   min-width: 0;
 }
 
+.playoff-slot-logo-wrap {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 .playoff-slot-logo {
   width: 22px;
   height: 22px;
@@ -2092,25 +2101,33 @@ textarea {
 
 .playoff-select {
   width: 100%;
-  max-width: 175px;
+  max-width: 100%;
   background: rgba(10, 15, 26, 0.85);
   color: #f1f5f9;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 4px;
-  padding: 3px 5px;
+  padding: 3px 6px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   outline: none;
-  transition: border-color 0.15s ease;
+  transition: all 0.15s ease;
 }
 
 .playoff-select:focus,
 .playoff-select:hover {
   border-color: var(--acc);
+}
+
+.playoff-select.is-empty {
+  color: var(--mute);
+  font-style: italic;
+  font-weight: 500;
+  border-style: dashed;
+  opacity: 0.75;
 }
 
 .playoff-select.is-override {

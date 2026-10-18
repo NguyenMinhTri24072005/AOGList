@@ -1540,32 +1540,42 @@ function renderPlayoffCard(m) {
         const sel = t.id === teamId ? "selected" : "";
         return `<option value="${t.id}" ${sel}>${esc(t.name)} (${t.id})</option>`;
       }).join("");
-      selectHtml = `<select class="playoff-select" data-slot="${slotKey}" title="Chọn đội hạt giống cho ô này">${opts}</select>`;
+      selectHtml = `<select class="playoff-select" data-slot="${slotKey}" title="Hạt giống: ${esc(autoLabel)}">${opts}</select>`;
     } else {
       const isOverridden = isOvr;
-      let autoOptionText = `⚡ ${autoLabel}`;
-      if (teamId && !isOverridden) {
-        autoOptionText += ` • ${teamName}`;
-      } else if (!teamId && !isOverridden) {
-        autoOptionText += ` (Chưa xác định)`;
+      const isEmpty = !teamId;
+      const autoOptionText = teamId ? `${teamName} (${teamId})` : `Chờ ${autoLabel}`;
+
+      let opts = "";
+      if (isOverridden) {
+        opts += `<option value="auto">⚡ Khôi phục tự động: ${esc(autoLabel)}</option>`;
+      } else {
+        opts += `<option value="auto" selected>${esc(autoOptionText)}</option>`;
       }
-      let opts = `<option value="auto" ${!isOverridden ? "selected" : ""}>${esc(autoOptionText)}</option>`;
+
       opts += state.teams.map(t => {
         const sel = isOverridden && teamId === t.id ? "selected" : "";
         return `<option value="${t.id}" ${sel}>🎯 Chỉ định: ${esc(t.name)} (${t.id})</option>`;
       }).join("");
-      selectHtml = `<select class="playoff-select ${isOverridden ? 'is-override' : ''}" data-slot="${slotKey}" title="Chọn đội cho ô này">${opts}</select>`;
+
+      const titleText = isOverridden
+        ? `Đang chỉ định thủ công: ${teamName} (${teamId}). Bấm chọn 'Khôi phục tự động' để theo nhánh.`
+        : (teamId ? `Đội tự động theo nhánh: ${teamName} (${teamId}) [${autoLabel}]` : `Chờ xác định đội từ: ${autoLabel}`);
+
+      selectHtml = `<select class="playoff-select ${isOverridden ? 'is-override' : ''} ${isEmpty ? 'is-empty' : ''}" data-slot="${slotKey}" title="${esc(titleText)}">${opts}</select>`;
     }
 
     const logoHtml = logo
       ? `<img class="playoff-slot-logo" src="${esc(logo)}" alt="${esc(teamId)}" onerror="this.style.display='none'">`
-      : `<span class="playoff-slot-logo-placeholder">⚔️</span>`;
+      : `<span class="playoff-slot-logo-placeholder" title="${esc(autoLabel)}">⚔️</span>`;
 
     return `
       <div class="playoff-team-slot ${isWin ? 'slot-winner' : (isPlayed ? 'slot-loser' : '')}">
         <span class="playoff-badge ${badgeClass}" title="${esc(autoLabel)}">${esc(badgeText)}</span>
         <div class="playoff-team-display">
-          ${logoHtml}
+          <div class="playoff-slot-logo-wrap">
+            ${logoHtml}
+          </div>
           <div class="playoff-select-wrap">
             ${selectHtml}
           </div>
@@ -1826,72 +1836,26 @@ function updatePlayoffCardDOM(card, mKey) {
   if (inputB) inputB.classList.toggle("winner-score", isWinB);
 }
 
-function updatePlayoffDownstreamDOM() {
+function updatePlayoffDownstreamDOM(activeKey) {
   const r = resolvePlayoffBracket(state.playoff);
-  const matchKeys = ["m3", "m4", "m5", "m6", "m7", "m8"];
+  const matchKeys = ["m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8"];
 
   matchKeys.forEach(k => {
-    const m = r[k];
+    if (k === activeKey) {
+      const card = document.querySelector(`.playoff-card[data-m="${k}"]`);
+      if (card) updatePlayoffCardDOM(card, k);
+      return;
+    }
+
     const card = document.querySelector(`.playoff-card[data-m="${k}"]`);
     if (!card) return;
 
-    // Slot A
-    if (!m.isOvrA) {
-      const slotA = card.querySelector('.playoff-team-slot:nth-child(1)');
-      if (slotA) {
-        const logoImg = slotA.querySelector('.playoff-slot-logo');
-        const select = slotA.querySelector('.playoff-select');
-        const teamObj = m.teamA ? state.teams.find(t => t.id === m.teamA) : null;
-        const logo = m.teamA ? teamLogo(m.teamA) : "";
-        if (logoImg) {
-          if (logo) {
-            logoImg.src = logo;
-            logoImg.style.display = "";
-          } else {
-            logoImg.style.display = "none";
-          }
-        }
-        if (select) {
-          const autoOpt = select.querySelector('option[value="auto"]');
-          if (autoOpt) {
-            let txt = `⚡ ${m.autoLabelA}`;
-            if (teamObj) txt += ` • ${teamObj.name}`;
-            else txt += ` (Chưa xác định)`;
-            autoOpt.textContent = txt;
-          }
-        }
-      }
+    const temp = document.createElement("div");
+    temp.innerHTML = renderPlayoffCard(r[k]);
+    const newCard = temp.firstElementChild;
+    if (newCard) {
+      card.replaceWith(newCard);
     }
-
-    // Slot B
-    if (!m.isOvrB) {
-      const slotB = card.querySelector('.playoff-team-slot:nth-child(2)');
-      if (slotB) {
-        const logoImg = slotB.querySelector('.playoff-slot-logo');
-        const select = slotB.querySelector('.playoff-select');
-        const teamObj = m.teamB ? state.teams.find(t => t.id === m.teamB) : null;
-        const logo = m.teamB ? teamLogo(m.teamB) : "";
-        if (logoImg) {
-          if (logo) {
-            logoImg.src = logo;
-            logoImg.style.display = "";
-          } else {
-            logoImg.style.display = "none";
-          }
-        }
-        if (select) {
-          const autoOpt = select.querySelector('option[value="auto"]');
-          if (autoOpt) {
-            let txt = `⚡ ${m.autoLabelB}`;
-            if (teamObj) txt += ` • ${teamObj.name}`;
-            else txt += ` (Chưa xác định)`;
-            autoOpt.textContent = txt;
-          }
-        }
-      }
-    }
-
-    updatePlayoffCardDOM(card, k);
   });
 
   const podiumWrap = $("playoffChampionWrap");
@@ -2062,7 +2026,7 @@ function setupPlayoffListeners() {
 
       save();
       updatePlayoffCardDOM(card, mKey);
-      updatePlayoffDownstreamDOM();
+      updatePlayoffDownstreamDOM(mKey);
       drawPlayoffLines();
     });
 
