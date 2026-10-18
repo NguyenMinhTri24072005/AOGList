@@ -851,19 +851,86 @@
   ],
   "scenarios": [
     {
-      "id": "jkk0w6mu",
-      "name": "kb1",
-      "picks": {
-        "m_70": "3-2"
-      }
+      "id": "default",
+      "name": "Kịch bản 1",
+      "picks": {}
     }
   ],
-  "active": "jkk0w6mu",
+  "active": "default",
   "settings": {
     "top": 6,
     "tiebreak": "diff_h2h",
     "legsTotal": 2,
     "legsDone": 1,
     "defaultBo": 5
+  },
+  "playoff": {
+    "seeds": {
+      "m1_a": "SGP",
+      "m1_b": "FL",
+      "m2_a": "FPT",
+      "m2_b": "BOOM",
+      "m3_a": "BOX",
+      "m4_a": "1S"
+    },
+    "matches": {
+      "m1": {
+        "sa": 0,
+        "sb": null,
+        "date": "23/10",
+        "time": "14:00",
+        "bo": 7
+      },
+      "m2": {
+        "sa": null,
+        "sb": null,
+        "date": "23/10",
+        "time": "18:00",
+        "bo": 7
+      },
+      "m3": {
+        "sa": null,
+        "sb": null,
+        "date": "24/10",
+        "time": "14:00",
+        "bo": 7
+      },
+      "m4": {
+        "sa": null,
+        "sb": null,
+        "date": "24/10",
+        "time": "18:00",
+        "bo": 7
+      },
+      "m5": {
+        "sa": null,
+        "sb": null,
+        "date": "25/10",
+        "time": "14:00",
+        "bo": 7
+      },
+      "m6": {
+        "sa": null,
+        "sb": null,
+        "date": "25/10",
+        "time": "18:00",
+        "bo": 7
+      },
+      "m7": {
+        "sa": null,
+        "sb": null,
+        "date": "07/11",
+        "time": "12:00",
+        "bo": 7
+      },
+      "m8": {
+        "sa": 1,
+        "sb": null,
+        "date": "07/11",
+        "time": "18:30",
+        "bo": 7
+      }
+    },
+    "overrides": {}
   }
 }
