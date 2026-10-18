@@ -867,11 +867,11 @@
   "playoff": {
     "seeds": {
       "m1_a": "SGP",
-      "m1_b": "BOOM",
+      "m1_b": "FL",
       "m2_a": "FPT",
-      "m2_b": "FL",
-      "m3_a": "BOX",
-      "m4_a": "1S"
+      "m2_b": "BOOM",
+      "m3_a": "GAM",
+      "m4_a": "BOX"
     },
     "matches": {
       "m1": {

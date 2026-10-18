@@ -1913,6 +1913,23 @@ textarea {
   gap: 14px;
 }
 
+/* Canh chỉnh vị trí các cột trong Playoff để các đường nối đối xứng, đẹp mắt */
+.bracket-group.group-r2-upper {
+  margin-top: 60px;
+}
+
+.bracket-group.group-r2-lower {
+  margin-top: 140px;
+}
+
+.bracket-col-spacer.group-r3-spacer {
+  height: 366px;
+}
+
+.grand-final-group.group-r4-gf {
+  margin-top: 175px;
+}
+
 /* Thẻ trận đấu Playoff */
 .playoff-card {
   background: rgba(18, 25, 41, 0.95);

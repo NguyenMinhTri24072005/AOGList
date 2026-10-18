@@ -36,15 +36,32 @@ const DEFAULT_SPECIAL_WEEKS = [
 ];
 
 function defaultPlayoff() {
+  let seeds = {
+    m1_a: "SGP",
+    m1_b: "FL",
+    m2_a: "FPT",
+    m2_b: "BOOM",
+    m3_a: "GAM",
+    m4_a: "BOX"
+  };
+  try {
+    if (typeof state !== "undefined" && state && Array.isArray(state.matches) && state.matches.length) {
+      const topTeams = compute(realResults()).slice(0, 6);
+      if (topTeams.length >= 6) {
+        seeds = {
+          m1_a: topTeams[0].id,
+          m1_b: topTeams[3].id,
+          m2_a: topTeams[1].id,
+          m2_b: topTeams[2].id,
+          m3_a: topTeams[4].id,
+          m4_a: topTeams[5].id
+        };
+      }
+    }
+  } catch (e) {}
+
   return {
-    seeds: {
-      m1_a: "SGP",
-      m1_b: "FL",
-      m2_a: "FPT",
-      m2_b: "BOOM",
-      m3_a: "BOX",
-      m4_a: "1S"
-    },
+    seeds,
     matches: {
       m1: { sa: null, sb: null, date: "23/10", time: "14:00", bo: 7 },
       m2: { sa: null, sb: null, date: "23/10", time: "18:00", bo: 7 },
@@ -58,6 +75,7 @@ function defaultPlayoff() {
     overrides: {}
   };
 }
+
 
 function normalisePlayoff(p) {
   const def = defaultPlayoff();
@@ -1426,7 +1444,7 @@ function resolvePlayoffBracket(po) {
   });
 
   // 2. M3 & M4 (Nhánh thua Vòng 1)
-  const m3 = evalMatch("m3", seeds.m3_a || "BOX", m1.loser, {
+  const m3 = evalMatch("m3", seeds.m3_a || "GAM", m1.loser, {
     name: "Trận 3",
     stage: "Nhánh Thua (Vòng 1)",
     time: "14:00",
@@ -1439,7 +1457,7 @@ function resolvePlayoffBracket(po) {
     autoLabelB: "Thua M1 (M1L)"
   });
 
-  const m4 = evalMatch("m4", seeds.m4_a || "1S", m2.loser, {
+  const m4 = evalMatch("m4", seeds.m4_a || "BOX", m2.loser, {
     name: "Trận 4",
     stage: "Nhánh Thua (Vòng 1)",
     time: "18:00",
@@ -1515,6 +1533,26 @@ function resolvePlayoffBracket(po) {
   return { m1, m2, m3, m4, m5, m6, m7, m8, champion, runnerUp, thirdPlace };
 }
 
+function getPlayoffTeams() {
+  try {
+    if (typeof compute === "function" && typeof realResults === "function" && state && Array.isArray(state.matches)) {
+      const top = compute(realResults()).slice(0, 6);
+      if (top.length >= 6) {
+        return top.map(r => state.teams.find(t => t.id === r.id) || { id: r.id, name: r.name });
+      }
+    }
+  } catch (e) {}
+
+  const seeds = (state.playoff && state.playoff.seeds) || {};
+  const seedIds = [seeds.m1_a, seeds.m1_b, seeds.m2_a, seeds.m2_b, seeds.m3_a, seeds.m4_a].filter(Boolean);
+  const uniqueIds = Array.from(new Set(seedIds));
+  if (uniqueIds.length >= 6) {
+    return uniqueIds.map(id => state.teams.find(t => t.id === id) || { id, name: id });
+  }
+
+  return (state.teams || []).slice(0, 6);
+}
+
 function renderPlayoffCard(m) {
   const isPlayed = m.isPlayed;
   const isWinA = isPlayed && m.winner === m.teamA;
@@ -1532,11 +1570,18 @@ function renderPlayoffCard(m) {
     if (badgeType === "win") badgeClass = "badge-win";
     else if (badgeType === "lose") badgeClass = "badge-lose";
 
+    const playoffTeams = getPlayoffTeams();
+    const eligibleTeams = [...playoffTeams];
+    if (teamId && !eligibleTeams.some(t => t.id === teamId)) {
+      const currentObj = state.teams.find(t => t.id === teamId) || { id: teamId, name: teamId };
+      eligibleTeams.push(currentObj);
+    }
+
     let selectHtml = "";
     const isSeedSlot = m.key === "m1" || m.key === "m2" || (m.key === "m3" && side === "a") || (m.key === "m4" && side === "a");
 
     if (isSeedSlot) {
-      const opts = state.teams.map(t => {
+      const opts = eligibleTeams.map(t => {
         const sel = t.id === teamId ? "selected" : "";
         return `<option value="${t.id}" ${sel}>${esc(t.name)} (${t.id})</option>`;
       }).join("");
@@ -1553,7 +1598,7 @@ function renderPlayoffCard(m) {
         opts += `<option value="auto" selected>${esc(autoOptionText)}</option>`;
       }
 
-      opts += state.teams.map(t => {
+      opts += eligibleTeams.map(t => {
         const sel = isOverridden && teamId === t.id ? "selected" : "";
         return `<option value="${t.id}" ${sel}>🎯 Chỉ định: ${esc(t.name)} (${t.id})</option>`;
       }).join("");
@@ -1704,73 +1749,98 @@ function drawPlayoffLines() {
 
   if (!m1 || !m2 || !m3 || !m4 || !m5 || !m6 || !m7 || !m8) return;
 
+  const r = resolvePlayoffBracket(state.playoff);
+
+  function roundPath(x1, y1, x2, y2, midX, radius = 8) {
+    const dy = y2 - y1;
+    const absDy = Math.abs(dy);
+    const dirY = dy >= 0 ? 1 : -1;
+    const rad = Math.min(radius, Math.abs(midX - x1) / 2, Math.abs(x2 - midX) / 2, absDy / 2);
+    if (rad < 2 || absDy < 4) {
+      return `M ${x1} ${y1} H ${midX} V ${y2} H ${x2}`;
+    }
+    return `M ${x1} ${y1} L ${midX - rad} ${y1} Q ${midX} ${y1} ${midX} ${y1 + dirY * rad} L ${midX} ${y2 - dirY * rad} Q ${midX} ${y2} ${midX + rad} ${y2} L ${x2} ${y2}`;
+  }
+
+  function makePath(d, isActive, activeColor = "#38bdf8", isDashed = false, filterType = "url(#glow-blue)") {
+    if (isActive) {
+      return `<path d="${d}" stroke="${activeColor}" stroke-width="2.5" ${isDashed ? 'stroke-dasharray="6,4"' : ''} fill="none" opacity="0.95" filter="${filterType}" />`;
+    }
+    return `<path d="${d}" stroke="#64748b" stroke-width="1.5" ${isDashed ? 'stroke-dasharray="5,4"' : ''} fill="none" opacity="0.32" />`;
+  }
+
+  function makeDot(cx, cy, isActive, activeColor = "#38bdf8") {
+    if (isActive) {
+      return `<circle cx="${cx}" cy="${cy}" r="3.5" fill="${activeColor}" opacity="0.95" />`;
+    }
+    return `<circle cx="${cx}" cy="${cy}" r="2.5" fill="#64748b" opacity="0.38" />`;
+  }
+
   let paths = "";
 
   // 1. M1 & M2 -> M6 (Nhánh thắng: Bán kết -> Chung kết nhánh thắng)
   const mid1 = (m1.right + m6.left) / 2;
-  paths += `
-    <path d="M ${m1.right} ${m1.centerY} H ${mid1} V ${m6.slotAY} H ${m6.left}" stroke="#38bdf8" stroke-width="2.5" fill="none" opacity="0.9" filter="url(#glow-blue)" />
-    <path d="M ${m2.right} ${m2.centerY} H ${mid1} V ${m6.slotBY} H ${m6.left}" stroke="#38bdf8" stroke-width="2.5" fill="none" opacity="0.9" filter="url(#glow-blue)" />
-    <circle cx="${m1.right}" cy="${m1.centerY}" r="3.5" fill="#38bdf8" />
-    <circle cx="${m2.right}" cy="${m2.centerY}" r="3.5" fill="#38bdf8" />
-    <circle cx="${m6.left}" cy="${m6.slotAY}" r="3.5" fill="#38bdf8" />
-    <circle cx="${m6.left}" cy="${m6.slotBY}" r="3.5" fill="#38bdf8" />
-  `;
+  const isAct1 = r.m1.isPlayed;
+  const isAct2 = r.m2.isPlayed;
+  paths += makePath(roundPath(m1.right, m1.centerY, m6.left, m6.slotAY, mid1), isAct1, "#38bdf8", false, "url(#glow-blue)");
+  paths += makePath(roundPath(m2.right, m2.centerY, m6.left, m6.slotBY, mid1), isAct2, "#38bdf8", false, "url(#glow-blue)");
+  paths += makeDot(m1.right, m1.centerY, isAct1, "#38bdf8");
+  paths += makeDot(m2.right, m2.centerY, isAct2, "#38bdf8");
+  paths += makeDot(m6.left, m6.slotAY, isAct1, "#38bdf8");
+  paths += makeDot(m6.left, m6.slotBY, isAct2, "#38bdf8");
 
   // 2. M3 & M4 -> M5 (Nhánh thua: Vòng 1 -> Bán kết nhánh thua)
   const mid2 = (m3.right + m5.left) / 2;
-  paths += `
-    <path d="M ${m3.right} ${m3.centerY} H ${mid2} V ${m5.slotAY} H ${m5.left}" stroke="#38bdf8" stroke-width="2.5" fill="none" opacity="0.9" filter="url(#glow-blue)" />
-    <path d="M ${m4.right} ${m4.centerY} H ${mid2} V ${m5.slotBY} H ${m5.left}" stroke="#38bdf8" stroke-width="2.5" fill="none" opacity="0.9" filter="url(#glow-blue)" />
-    <circle cx="${m3.right}" cy="${m3.centerY}" r="3.5" fill="#38bdf8" />
-    <circle cx="${m4.right}" cy="${m4.centerY}" r="3.5" fill="#38bdf8" />
-    <circle cx="${m5.left}" cy="${m5.slotAY}" r="3.5" fill="#38bdf8" />
-    <circle cx="${m5.left}" cy="${m5.slotBY}" r="3.5" fill="#38bdf8" />
-  `;
+  const isAct3 = r.m3.isPlayed;
+  const isAct4 = r.m4.isPlayed;
+  paths += makePath(roundPath(m3.right, m3.centerY, m5.left, m5.slotAY, mid2), isAct3, "#38bdf8", false, "url(#glow-blue)");
+  paths += makePath(roundPath(m4.right, m4.centerY, m5.left, m5.slotBY, mid2), isAct4, "#38bdf8", false, "url(#glow-blue)");
+  paths += makeDot(m3.right, m3.centerY, isAct3, "#38bdf8");
+  paths += makeDot(m4.right, m4.centerY, isAct4, "#38bdf8");
+  paths += makeDot(m5.left, m5.slotAY, isAct3, "#38bdf8");
+  paths += makeDot(m5.left, m5.slotBY, isAct4, "#38bdf8");
 
   // 3. M5 Winner -> M7 Slot B (Thắng bán kết nhánh thua tiến vào Chung kết nhánh thua)
   const mid57 = (m5.right + m7.left) / 2;
-  paths += `
-    <path d="M ${m5.right} ${m5.centerY} H ${mid57} V ${m7.slotBY} H ${m7.left}" stroke="#38bdf8" stroke-width="2.5" fill="none" opacity="0.9" filter="url(#glow-blue)" />
-    <circle cx="${m5.right}" cy="${m5.centerY}" r="3.5" fill="#38bdf8" />
-    <circle cx="${m7.left}" cy="${m7.slotBY}" r="3.5" fill="#38bdf8" />
-  `;
+  const isAct5 = r.m5.isPlayed;
+  paths += makePath(roundPath(m5.right, m5.centerY, m7.left, m7.slotBY, mid57), isAct5, "#38bdf8", false, "url(#glow-blue)");
+  paths += makeDot(m5.right, m5.centerY, isAct5, "#38bdf8");
+  paths += makeDot(m7.left, m7.slotBY, isAct5, "#38bdf8");
 
   // 4. M6 Loser -> M7 Slot A (Thua Chung kết nhánh thắng rơi xuống Chung kết nhánh thua)
-  const dropX6 = (m6.right + m7.left) / 2 - 12;
-  paths += `
-    <path d="M ${m6.right} ${m6.slotBY} H ${dropX6} V ${m7.slotAY} H ${m7.left}" stroke="#a855f7" stroke-width="2.5" stroke-dasharray="6,4" fill="none" opacity="0.85" filter="url(#glow-purple)" />
-    <circle cx="${m6.right}" cy="${m6.slotBY}" r="3.5" fill="#a855f7" />
-    <circle cx="${m7.left}" cy="${m7.slotAY}" r="3.5" fill="#a855f7" />
-  `;
+  const dropX6 = m6.right + (m7.left - m6.right) * 0.45;
+  const isAct6 = r.m6.isPlayed;
+  paths += makePath(roundPath(m6.right, m6.slotBY, m7.left, m7.slotAY, dropX6), isAct6, "#c084fc", true, "url(#glow-purple)");
+  paths += makeDot(m6.right, m6.slotBY, isAct6, "#c084fc");
+  paths += makeDot(m7.left, m7.slotAY, isAct6, "#c084fc");
 
   // 5. M6 Winner -> M8 Slot A (Vô địch nhánh thắng tiến vào Chung kết tổng)
-  const mid68 = (m6.right + m8.left) / 2;
-  paths += `
-    <path d="M ${m6.right} ${m6.slotAY} H ${mid68} V ${m8.slotAY} H ${m8.left}" stroke="#fbbf24" stroke-width="2.5" fill="none" opacity="0.95" filter="url(#glow-gold)" />
-    <circle cx="${m6.right}" cy="${m6.slotAY}" r="3.5" fill="#fbbf24" />
-    <circle cx="${m8.left}" cy="${m8.slotAY}" r="3.5" fill="#fbbf24" />
-  `;
+  const turnX68 = m7.right + (m8.left - m7.right) * 0.35;
+  paths += makePath(roundPath(m6.right, m6.slotAY, m8.left, m8.slotAY, turnX68, 10), isAct6, "#fbbf24", false, "url(#glow-gold)");
+  paths += makeDot(m6.right, m6.slotAY, isAct6, "#fbbf24");
+  paths += makeDot(m8.left, m8.slotAY, isAct6, "#fbbf24");
 
   // 6. M7 Winner -> M8 Slot B (Vô địch nhánh thua tiến vào Chung kết tổng)
-  const mid78 = (m7.right + m8.left) / 2;
-  paths += `
-    <path d="M ${m7.right} ${m7.centerY} H ${mid78} V ${m8.slotBY} H ${m8.left}" stroke="#38bdf8" stroke-width="2.5" fill="none" opacity="0.9" filter="url(#glow-blue)" />
-    <circle cx="${m7.right}" cy="${m7.centerY}" r="3.5" fill="#38bdf8" />
-    <circle cx="${m8.left}" cy="${m8.slotBY}" r="3.5" fill="#38bdf8" />
-  `;
+  const turnX78 = m7.right + (m8.left - m7.right) * 0.65;
+  const isAct7 = r.m7.isPlayed;
+  paths += makePath(roundPath(m7.right, m7.centerY, m8.left, m8.slotBY, turnX78, 10), isAct7, "#38bdf8", false, "url(#glow-blue)");
+  paths += makeDot(m7.right, m7.centerY, isAct7, "#38bdf8");
+  paths += makeDot(m8.left, m8.slotBY, isAct7, "#38bdf8");
 
   // 7. M8 Winner -> Champion Box (nếu đã có vô địch)
-  const champBox = wrap.querySelector(".champion-podium-card.champion-active");
-  if (champBox) {
-    const cb = champBox.getBoundingClientRect();
-    const champLeft = cb.left - wrapRect.left;
-    const champCenterY = (cb.top + cb.bottom) / 2 - wrapRect.top;
-    paths += `
-      <path d="M ${m8.right} ${m8.centerY} H ${(m8.right + champLeft)/2} V ${champCenterY} H ${champLeft}" stroke="#f59e0b" stroke-width="3" fill="none" opacity="0.95" filter="url(#glow-gold)" />
-      <circle cx="${m8.right}" cy="${m8.centerY}" r="4" fill="#f59e0b" />
-      <circle cx="${champLeft}" cy="${champCenterY}" r="4" fill="#f59e0b" />
-    `;
+  if (r.champion) {
+    const champBox = wrap.querySelector(".champion-podium-card.champion-active");
+    if (champBox) {
+      const cb = champBox.getBoundingClientRect();
+      const champTop = cb.top - wrapRect.top;
+      const m8CenterX = (m8.left + m8.right) / 2;
+      const champCenterX = (cb.left + cb.right) / 2 - wrapRect.left;
+      paths += `
+        <path d="M ${m8CenterX} ${m8.bottom} V ${champTop}" stroke="#fbbf24" stroke-width="3" fill="none" opacity="0.95" filter="url(#glow-gold)" />
+        <circle cx="${m8CenterX}" cy="${m8.bottom}" r="4" fill="#fbbf24" />
+        <circle cx="${champCenterX}" cy="${champTop}" r="4" fill="#fbbf24" />
+      `;
+    }
   }
 
   svg.innerHTML = `
@@ -1886,7 +1956,7 @@ function renderPlayoff() {
             <span class="col-subtitle">23/10 – 24/10 • BO7</span>
           </div>
           
-          <div class="bracket-group">
+          <div class="bracket-group group-r1-upper">
             <div class="group-label upper-label"><span>▲</span> NHÁNH THẮNG (UPPER)</div>
             <div class="group-cards">
               ${renderPlayoffCard(r.m1)}
@@ -1894,7 +1964,7 @@ function renderPlayoff() {
             </div>
           </div>
 
-          <div class="bracket-group">
+          <div class="bracket-group group-r1-lower">
             <div class="group-label lower-label"><span>▼</span> NHÁNH THUA (LOWER)</div>
             <div class="group-cards">
               ${renderPlayoffCard(r.m3)}
@@ -1910,14 +1980,14 @@ function renderPlayoff() {
             <span class="col-subtitle">25/10 • BO7</span>
           </div>
 
-          <div class="bracket-group">
+          <div class="bracket-group group-r2-upper">
             <div class="group-label upper-label"><span>👑</span> CHUNG KẾT NHÁNH THẮNG</div>
             <div class="group-cards">
               ${renderPlayoffCard(r.m6)}
             </div>
           </div>
 
-          <div class="bracket-group">
+          <div class="bracket-group group-r2-lower">
             <div class="group-label lower-label"><span>⚡</span> BÁN KẾT NHÁNH THUA</div>
             <div class="group-cards">
               ${renderPlayoffCard(r.m5)}
@@ -1932,9 +2002,9 @@ function renderPlayoff() {
             <span class="col-subtitle">07/11 • BO7</span>
           </div>
 
-          <div class="bracket-col-spacer"></div>
+          <div class="bracket-col-spacer group-r3-spacer"></div>
 
-          <div class="bracket-group">
+          <div class="bracket-group group-r3-lower">
             <div class="group-label lower-label"><span>🔥</span> TRANH VÉ GRAND FINAL</div>
             <div class="group-cards">
               ${renderPlayoffCard(r.m7)}
@@ -1949,7 +2019,7 @@ function renderPlayoff() {
             <span class="col-subtitle">18:30 - 07/11 • BO7</span>
           </div>
 
-          <div class="bracket-group grand-final-group">
+          <div class="bracket-group grand-final-group group-r4-gf">
             <div class="grand-final-banner">
               <div class="gf-title">GRAND FINAL</div>
               <div class="gf-subtitle">ĐẤU TRƯỜNG DANH VỌNG MÙA ĐÔNG 2026</div>
