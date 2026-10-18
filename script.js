@@ -772,6 +772,227 @@ function renderMatches() {
   });
 }
 
+/* ---------- Thuật toán tính trạng thái vé Top / Bị loại theo tiêu chí xếp hạng ---------- */
+function computeScenarioStatuses(list, scResults, unpredicted, top, tb) {
+  const statusMap = {};
+  if (!top || !list || list.length === 0) return statusMap;
+
+  // Trường hợp 1: Toàn bộ các trận trong kịch bản đã được điền tỉ số
+  if (unpredicted.length === 0) {
+    list.forEach((r, idx) => {
+      statusMap[r.id] = (idx + 1) <= top ? "ok" : "bad";
+    });
+    return statusMap;
+  }
+
+  const teamIds = list.map(t => t.id);
+
+  // Xây dựng ma trận đối đầu cơ sở từ các trận đã đấu hoặc đã có tỉ số trong kịch bản
+  const baseH2H = {};
+  teamIds.forEach(a => {
+    baseH2H[a] = {};
+    teamIds.forEach(b => {
+      baseH2H[a][b] = { w: 0, gw: 0 };
+    });
+  });
+  scResults.forEach(m => {
+    if (baseH2H[m.a] && baseH2H[m.a][m.b]) {
+      if (m.sa > m.sb) baseH2H[m.a][m.b].w++;
+      else if (m.sb > m.sa) baseH2H[m.b][m.a].w++;
+      baseH2H[m.a][m.b].gw += m.sa;
+      baseH2H[m.b][m.a].gw += m.sb;
+    }
+  });
+
+  // Hàm so sánh 2 đội theo đúng tiêu chí xếp hạng đang chọn
+  function compareTeams(ti, tj, pts, diff, gw, extraH2H) {
+    // 1. Điểm số (số trận thắng)
+    if (pts[tj] !== pts[ti]) return pts[tj] - pts[ti];
+
+    // Đối đầu
+    const getH2H = (x, y) => {
+      const wx = (baseH2H[x]?.[y]?.w || 0) + (extraH2H ? extraH2H[x]?.[y]?.w || 0 : 0);
+      const wy = (baseH2H[y]?.[x]?.w || 0) + (extraH2H ? extraH2H[y]?.[x]?.w || 0 : 0);
+      if (wx !== wy) return wx - wy;
+      const gwx = (baseH2H[x]?.[y]?.gw || 0) + (extraH2H ? extraH2H[x]?.[y]?.gw || 0 : 0);
+      const gwy = (baseH2H[y]?.[x]?.gw || 0) + (extraH2H ? extraH2H[y]?.[x]?.gw || 0 : 0);
+      return gwx - gwy;
+    };
+
+    if (tb === "h2h") {
+      // Điểm → Đối đầu → Hiệu số ván → Ván thắng
+      const h = getH2H(ti, tj);
+      if (h !== 0) return -h;
+      if (diff[tj] !== diff[ti]) return diff[tj] - diff[ti];
+      if (gw[tj] !== gw[ti]) return gw[tj] - gw[ti];
+      return 0;
+    }
+
+    if (tb === "diff") {
+      // Điểm → Hiệu số ván → Ván thắng → Đối đầu
+      if (diff[tj] !== diff[ti]) return diff[tj] - diff[ti];
+      if (gw[tj] !== gw[ti]) return gw[tj] - gw[ti];
+      const h = getH2H(ti, tj);
+      if (h !== 0) return -h;
+      return 0;
+    }
+
+    // Chuẩn AOG ("diff_h2h"): Điểm → Hiệu số ván → Đối đầu → Ván thắng
+    if (diff[tj] !== diff[ti]) return diff[tj] - diff[ti];
+    const h = getH2H(ti, tj);
+    if (h !== 0) return -h;
+    if (gw[tj] !== gw[ti]) return gw[tj] - gw[ti];
+    return 0;
+  }
+
+  // Trường hợp 2: Số trận chưa dự đoán <= 11 -> mô phỏng chính xác 100% tất cả các khả năng kết quả
+  if (unpredicted.length <= 11) {
+    const numOutcomes = Math.pow(2, unpredicted.length);
+    const minRank = {}, maxRank = {};
+    teamIds.forEach(id => { minRank[id] = 99; maxRank[id] = -1; });
+
+    const currentMap = {};
+    list.forEach(t => {
+      currentMap[t.id] = { w: t.w, diff: t.diff, gw: t.gw };
+    });
+
+    for (let mask = 0; mask < numOutcomes; mask++) {
+      const pts = {}, diff = {}, gw = {};
+      const extraH2H = {};
+      teamIds.forEach(id => {
+        extraH2H[id] = {};
+        teamIds.forEach(otherId => extraH2H[id][otherId] = { w: 0, gw: 0 });
+        pts[id] = currentMap[id].w;
+        diff[id] = currentMap[id].diff;
+        gw[id] = currentMap[id].gw;
+      });
+
+      for (let i = 0; i < unpredicted.length; i++) {
+        const m = unpredicted[i];
+        const winsNeeded = needWins(m.bo || 5);
+        if ((mask & (1 << i)) !== 0) {
+          pts[m.a]++; diff[m.a] += winsNeeded; gw[m.a] += winsNeeded;
+          diff[m.b] -= winsNeeded;
+          extraH2H[m.a][m.b].w++; extraH2H[m.a][m.b].gw += winsNeeded;
+        } else {
+          pts[m.b]++; diff[m.b] += winsNeeded; gw[m.b] += winsNeeded;
+          diff[m.a] -= winsNeeded;
+          extraH2H[m.b][m.a].w++; extraH2H[m.b][m.a].gw += winsNeeded;
+        }
+      }
+
+      for (let i = 0; i < teamIds.length; i++) {
+        const ti = teamIds[i];
+        let rk = 1;
+        for (let j = 0; j < teamIds.length; j++) {
+          if (i === j) continue;
+          const tj = teamIds[j];
+          const cmp = compareTeams(ti, tj, pts, diff, gw, extraH2H);
+          if (cmp > 0) rk++;
+        }
+        if (rk < minRank[ti]) minRank[ti] = rk;
+        if (rk > maxRank[ti]) maxRank[ti] = rk;
+      }
+    }
+
+    teamIds.forEach(id => {
+      if (maxRank[id] <= top) statusMap[id] = "ok";
+      else if (minRank[id] > top) statusMap[id] = "bad";
+      else statusMap[id] = "open";
+    });
+    return statusMap;
+  }
+
+  // Trường hợp 3: Khi còn nhiều trận (> 11) -> dùng chặn trên/chặn dưới kết hợp tiêu chí phụ tiebreak
+  const unpMap = {};
+  teamIds.forEach(id => unpMap[id] = []);
+  unpredicted.forEach(m => {
+    if (unpMap[m.a]) unpMap[m.a].push(m);
+    if (unpMap[m.b]) unpMap[m.b].push(m);
+  });
+
+  const bMap = {};
+  list.forEach(t => {
+    const unp = unpMap[t.id] || [];
+    const rem = unp.length;
+    let maxDiffSwing = 0;
+    let maxGwGain = 0;
+    unp.forEach(m => {
+      const w = needWins(m.bo || 5);
+      maxDiffSwing += w;
+      maxGwGain += w;
+    });
+
+    bMap[t.id] = {
+      pts: t.pts,
+      diff: t.diff,
+      gw: t.gw,
+      rem: rem,
+      minPts: t.pts,
+      maxPts: t.pts + rem,
+      minDiff: t.diff - maxDiffSwing,
+      maxDiff: t.diff + maxDiffSwing,
+      minGw: t.gw,
+      maxGw: t.gw + maxGwGain
+    };
+  });
+
+  list.forEach(r => {
+    const rb = bMap[r.id];
+    let guaranteedAhead = 0;
+    let canBeAhead = 0;
+
+    list.forEach(o => {
+      if (o.id === r.id) return;
+      const ob = bMap[o.id];
+
+      // Đội o chắc chắn xếp trên đội r
+      if (ob.minPts > rb.maxPts) {
+        guaranteedAhead++;
+      } else if (ob.minPts === rb.maxPts) {
+        if (tb === "h2h") {
+          const directUnp = unpredicted.filter(m => (m.a === r.id && m.b === o.id) || (m.a === o.id && m.b === r.id));
+          if (directUnp.length === 0) {
+            const h = (baseH2H[o.id]?.[r.id]?.w || 0) - (baseH2H[r.id]?.[o.id]?.w || 0);
+            if (h > 0) guaranteedAhead++;
+          }
+        } else if (tb === "diff_h2h" || tb === "diff") {
+          if (ob.minDiff > rb.maxDiff) {
+            guaranteedAhead++;
+          }
+        }
+      }
+
+      // Đội o có thể xếp trên đội r
+      if (ob.maxPts > rb.minPts) {
+        canBeAhead++;
+      } else if (ob.maxPts === rb.minPts) {
+        if (tb === "h2h") {
+          const directUnp = unpredicted.filter(m => (m.a === r.id && m.b === o.id) || (m.a === o.id && m.b === r.id));
+          if (directUnp.length === 0) {
+            const h = (baseH2H[r.id]?.[o.id]?.w || 0) - (baseH2H[o.id]?.[r.id]?.w || 0);
+            if (h <= 0) canBeAhead++;
+          } else {
+            canBeAhead++;
+          }
+        } else if (tb === "diff_h2h" || tb === "diff") {
+          if (ob.maxDiff >= rb.minDiff) {
+            canBeAhead++;
+          }
+        } else {
+          canBeAhead++;
+        }
+      }
+    });
+
+    if (guaranteedAhead >= top) statusMap[r.id] = "bad";
+    else if (canBeAhead < top) statusMap[r.id] = "ok";
+    else statusMap[r.id] = "open";
+  });
+
+  return statusMap;
+}
+
 /* ---------- Render: kịch bản ---------- */
 function renderScenario() {
   const sc = activeSc();
@@ -783,31 +1004,29 @@ function renderScenario() {
   }
 
   const top = Number(state.settings.top) || 0;
+  const tbCriteria = state.settings.tiebreak || "diff_h2h";
   const realRank = {}; compute(realResults()).forEach((r, i) => realRank[r.id] = i + 1);
-  const list = compute(scenarioResults(sc));
+  const scRes = scenarioResults(sc);
+  const list = compute(scRes);
 
+  const unpredicted = state.matches.filter(m => !isPlayed(m) && !pickOf(sc, m));
   const undecided = {}; state.teams.forEach(t => undecided[t.id] = 0);
-  let totalUndecided = 0;
-  state.matches.filter(m => !isPlayed(m)).forEach(m => {
-    if (!pickOf(sc, m)) { undecided[m.a]++; undecided[m.b]++; totalUndecided++; }
-  });
-  list.forEach(r => { r.rem = undecided[r.id]; r.max = r.pts + r.rem; });
+  unpredicted.forEach(m => { undecided[m.a]++; undecided[m.b]++; });
+  list.forEach(r => { r.rem = undecided[r.id] || 0; r.max = r.pts + r.rem; });
+
+  const statusMap = computeScenarioStatuses(list, scRes, unpredicted, top, tbCriteria);
 
   const tb = $("scStandings").tBodies[0]; tb.innerHTML = "";
   list.forEach((r, i) => {
     const rank = i + 1;
-    let status = "";
-    if (top) {
-      if (totalUndecided === 0) status = rank <= top ? "ok" : "bad";
-      else {
-        const others = list.filter(o => o.id !== r.id);
-        if (others.filter(o => o.max >= r.pts).length < top) status = "ok";
-        else if (others.filter(o => o.pts > r.max).length >= top) status = "bad";
-        else status = "open";
-      }
-    }
+    const status = statusMap[r.id] || "";
     const label = { ok: "✔ Vào Top " + top, bad: "✖ Bị loại", open: "⚡ Còn cơ hội" }[status] || "";
     const tagClass = { ok: "tag-playoff", bad: "tag-out", open: "tag-open" }[status] || "";
+    const titleHint = {
+      ok: `Đã chắc suất vào Top ${top} trong mọi trường hợp`,
+      bad: `Đã chính thức bị loại khỏi Top ${top} theo tiêu chí ${tbCriteria}`,
+      open: `Vẫn còn cơ hội cạnh tranh vào Top ${top}`
+    }[status] || "";
 
     const dl = realRank[r.id] - rank;
     const deltaHtml = dl > 0 ? `<span class="delta-badge delta-up">▲${dl}</span>` : dl < 0 ? `<span class="delta-badge delta-down">▼${-dl}</span>` : `<span class="delta-badge delta-same">–</span>`;
@@ -844,7 +1063,7 @@ function renderScenario() {
       <td class="col-pts"><span class="pts-pill">${r.pts}</span></td>
       <td class="col-stat stat-max">${r.max}</td>
       <td class="col-stat"><span class="diff-pill ${diffClass}">${diffSign}</span></td>
-      <td class="col-status">${label ? `<span class="tag ${tagClass}">${label}</span>` : ""}</td>
+      <td class="col-status">${label ? `<span class="tag ${tagClass}" title="${esc(titleHint)}">${label}</span>` : ""}</td>
     `;
     tb.appendChild(tr);
   });
