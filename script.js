@@ -2184,7 +2184,23 @@ function setupPlayoffListeners() {
 }
 
 /* ---------- Form trận ---------- */
-function say(text, kind) { const m = $("msg"); m.textContent = text; m.className = "msg " + (kind || ""); }
+function say(text, kind) {
+  const m = $("msg");
+  if (m) { m.textContent = text; m.className = "msg " + (kind || ""); }
+  const poMsg = $("playoffMsg");
+  if (poMsg) {
+    poMsg.textContent = text;
+    poMsg.className = "msg " + (kind || "");
+    if (text) {
+      setTimeout(() => {
+        if (poMsg.textContent === text) {
+          poMsg.textContent = "";
+          poMsg.className = "msg";
+        }
+      }, 4000);
+    }
+  }
+}
 function readForm() {
   const a = $("teamA").value, b = $("teamB").value, bo = Number($("bo").value);
   const rawA = $("scoreA").value.trim(), rawB = $("scoreB").value.trim();
