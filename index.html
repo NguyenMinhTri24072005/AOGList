@@ -33,6 +33,10 @@
             <span class="tab-icon">🔮</span>
             <span class="tab-text">Kịch bản</span>
           </button>
+          <button id="tabPlayoff" type="button" title="Nhánh đấu Vòng Playoffs (Nhánh thắng - Nhánh thua Double Elimination)">
+            <span class="tab-icon">⚔️</span>
+            <span class="tab-text">Play-offs</span>
+          </button>
         </div>
 
         <div class="header-tools">
@@ -381,6 +385,47 @@
           </div>
         </div>
       </details>
+    </main>
+
+    <!-- ================= TAB PLAY-OFFS ================= -->
+    <main id="viewPlayoff" class="hide">
+      <!-- HEADER / THANH ĐIỀU KHIỂN PLAYOFF -->
+      <section class="card playoff-header-card">
+        <div class="playoff-header-inner">
+          <div class="playoff-title-group">
+            <div class="section-title-row">
+              <span class="section-icon">⚔️</span>
+              <h2>Nhánh Đấu Vòng Play-offs</h2>
+              <span class="live-pill bo7-pill">Tất cả trận BO7</span>
+              <span class="format-pill">Double Elimination (Nhánh Thắng - Nhánh Thua)</span>
+            </div>
+            <span class="tip-inline">Điền tỉ số để hệ thống tự động đưa đội thắng &amp; đội thua vào các nhánh tiếp theo. Bạn có thể tự do chọn đội cho bất kỳ ô nào.</span>
+          </div>
+          <div class="playoff-actions-group">
+            <button id="btnPlayoffLoadReal" class="primary sm" type="button" title="Tự động lấy Top 6 đội từ Bảng xếp hạng thực tế nạp vào 6 vị trí hạt giống">
+              <span>⚡</span> Nạp Top 6 từ BXH
+            </button>
+            <button id="btnPlayoffLoadScn" class="ghost sm" type="button" title="Tự động lấy Top 6 đội từ Bảng kịch bản đang mở">
+              <span>🔮</span> Nạp từ Kịch bản
+            </button>
+            <button id="btnPlayoffResetScores" class="ghost sm" type="button" title="Xóa tất cả tỉ số trận đấu để dự đoán lại (giữ nguyên các đội)">
+              <span>🔄</span> Đặt lại tỉ số
+            </button>
+            <button id="btnPlayoffResetAll" class="danger sm" type="button" title="Khôi phục toàn bộ nhánh đấu về mặc định ban đầu">
+              <span>🗑️</span> Làm mới nhánh
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- KHUNG NHÁNH ĐẤU BRACKET VIEWPORT -->
+      <section class="card playoff-bracket-card">
+        <div class="playoff-scroll-wrap" id="playoffScrollWrap">
+          <div class="playoff-bracket" id="playoffBracket">
+            <!-- Rendered by script.js -->
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 

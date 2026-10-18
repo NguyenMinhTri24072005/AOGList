@@ -35,6 +35,57 @@ const DEFAULT_SPECIAL_WEEKS = [
   }
 ];
 
+function defaultPlayoff() {
+  return {
+    seeds: {
+      m1_a: "SGP",
+      m1_b: "FL",
+      m2_a: "FPT",
+      m2_b: "BOOM",
+      m3_a: "BOX",
+      m4_a: "1S"
+    },
+    matches: {
+      m1: { sa: null, sb: null, date: "23/10", time: "14:00", bo: 7 },
+      m2: { sa: null, sb: null, date: "23/10", time: "18:00", bo: 7 },
+      m3: { sa: null, sb: null, date: "24/10", time: "14:00", bo: 7 },
+      m4: { sa: null, sb: null, date: "24/10", time: "18:00", bo: 7 },
+      m5: { sa: null, sb: null, date: "25/10", time: "14:00", bo: 7 },
+      m6: { sa: null, sb: null, date: "25/10", time: "18:00", bo: 7 },
+      m7: { sa: null, sb: null, date: "07/11", time: "12:00", bo: 7 },
+      m8: { sa: null, sb: null, date: "07/11", time: "18:30", bo: 7 }
+    },
+    overrides: {}
+  };
+}
+
+function normalisePlayoff(p) {
+  const def = defaultPlayoff();
+  if (!p || typeof p !== "object") return def;
+  const res = {
+    seeds: Object.assign({}, def.seeds, p.seeds || {}),
+    matches: {},
+    overrides: Object.assign({}, p.overrides || {})
+  };
+  const matchKeys = ["m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8"];
+  matchKeys.forEach(k => {
+    const pm = (p.matches && p.matches[k]) || {};
+    const dm = def.matches[k];
+    let sa = pm.sa !== undefined ? pm.sa : pm.scoreA;
+    let sb = pm.sb !== undefined ? pm.sb : pm.scoreB;
+    sa = sa !== null && sa !== undefined && sa !== "" && !isNaN(sa) ? Number(sa) : null;
+    sb = sb !== null && sb !== undefined && sb !== "" && !isNaN(sb) ? Number(sb) : null;
+    res.matches[k] = {
+      sa,
+      sb,
+      date: pm.date || dm.date,
+      time: pm.time || dm.time,
+      bo: Number(pm.bo) || dm.bo || 7
+    };
+  });
+  return res;
+}
+
 function fresh() {
   const sid = uid();
   return {
@@ -43,7 +94,8 @@ function fresh() {
     specialWeeks: DEFAULT_SPECIAL_WEEKS.slice(),
     scenarios: [{ id: sid, name: "Kịch bản 1", picks: {} }],
     active: sid,
-    settings: { top: 6, tiebreak: "diff_h2h", legsTotal: 2, legsDone: 1, defaultBo: 5 }
+    settings: { top: 6, tiebreak: "diff_h2h", legsTotal: 2, legsDone: 1, defaultBo: 5 },
+    playoff: defaultPlayoff()
   };
 }
 
@@ -87,6 +139,7 @@ function normalise(s) {
   s.settings = Object.assign({ top: 6, tiebreak: "diff_h2h", legsTotal: 2, legsDone: 1, defaultBo: 5 }, s.settings || {});
   if (!Array.isArray(s.scenarios) || !s.scenarios.length) s.scenarios = [{ id: uid(), name: "Kịch bản 1", picks: {} }];
   if (!s.scenarios.some(x => x.id === s.active)) s.active = s.scenarios[0].id;
+  s.playoff = normalisePlayoff(s.playoff);
   return s;
 }
 
@@ -111,7 +164,8 @@ function formatForStorage(st) {
     specialWeeks: st.specialWeeks || DEFAULT_SPECIAL_WEEKS.slice(),
     scenarios: st.scenarios || [],
     active: st.active,
-    settings: st.settings
+    settings: st.settings,
+    playoff: st.playoff || defaultPlayoff()
   };
 }
 
@@ -390,12 +444,15 @@ function setTab(t) {
   tab = t;
   $("tabReal").classList.toggle("on", t === "real");
   $("tabScn").classList.toggle("on", t === "scn");
+  if ($("tabPlayoff")) $("tabPlayoff").classList.toggle("on", t === "playoff");
   $("viewReal").classList.toggle("hide", t !== "real");
   $("viewScn").classList.toggle("hide", t !== "scn");
+  if ($("viewPlayoff")) $("viewPlayoff").classList.toggle("hide", t !== "playoff");
   renderAll();
 }
 $("tabReal").onclick = () => setTab("real");
 $("tabScn").onclick = () => setTab("scn");
+if ($("tabPlayoff")) $("tabPlayoff").onclick = () => setTab("playoff");
 
 /* ---------- Render: thực tế ---------- */
 function renderStandings() {
@@ -1291,6 +1348,547 @@ function loadAI(intoNew) {
 $("btnLoadNew").onclick = () => loadAI(true);
 $("btnLoadCur").onclick = () => loadAI(false);
 
+/* ---------- PLAY-OFFS (DOUBLE ELIMINATION) ---------- */
+function resolvePlayoffBracket(po) {
+  if (!po) po = defaultPlayoff();
+  const seeds = po.seeds || {};
+  const matches = po.matches || {};
+  const ovr = po.overrides || {};
+
+  function evalMatch(key, defA, defB, meta) {
+    const m = matches[key] || {};
+    const teamA = ovr[`${key}_a`] || defA || null;
+    const teamB = ovr[`${key}_b`] || defB || null;
+
+    let sa = m.sa;
+    let sb = m.sb;
+    sa = (sa !== null && sa !== undefined && sa !== "" && !isNaN(sa)) ? Number(sa) : null;
+    sb = (sb !== null && sb !== undefined && sb !== "" && !isNaN(sb)) ? Number(sb) : null;
+
+    let winner = null;
+    let loser = null;
+    let isPlayed = false;
+
+    if (teamA && teamB && sa !== null && sb !== null && sa !== sb) {
+      isPlayed = true;
+      if (sa > sb) {
+        winner = teamA;
+        loser = teamB;
+      } else {
+        winner = teamB;
+        loser = teamA;
+      }
+    }
+
+    return {
+      key,
+      ...meta,
+      bo: m.bo || 7,
+      date: m.date || meta.date || "",
+      time: m.time || meta.time || "",
+      teamA,
+      teamB,
+      sa,
+      sb,
+      winner,
+      loser,
+      isPlayed,
+      isOvrA: Boolean(ovr[`${key}_a`]),
+      isOvrB: Boolean(ovr[`${key}_b`])
+    };
+  }
+
+  // 1. M1 & M2 (Nhánh thắng Vòng 1)
+  const m1 = evalMatch("m1", seeds.m1_a || "SGP", seeds.m1_b || "FL", {
+    name: "Trận 1",
+    stage: "Nhánh Thắng (Vòng 1)",
+    time: "14:00",
+    date: "23/10",
+    badgeA: "#1",
+    badgeB: "#4",
+    typeA: "seed",
+    typeB: "seed",
+    autoLabelA: "Hạt giống #1",
+    autoLabelB: "Hạt giống #4"
+  });
+
+  const m2 = evalMatch("m2", seeds.m2_a || "FPT", seeds.m2_b || "BOOM", {
+    name: "Trận 2",
+    stage: "Nhánh Thắng (Vòng 1)",
+    time: "18:00",
+    date: "23/10",
+    badgeA: "#2",
+    badgeB: "#3",
+    typeA: "seed",
+    typeB: "seed",
+    autoLabelA: "Hạt giống #2",
+    autoLabelB: "Hạt giống #3"
+  });
+
+  // 2. M3 & M4 (Nhánh thua Vòng 1)
+  const m3 = evalMatch("m3", seeds.m3_a || "BOX", m1.loser, {
+    name: "Trận 3",
+    stage: "Nhánh Thua (Vòng 1)",
+    time: "14:00",
+    date: "24/10",
+    badgeA: "#5",
+    badgeB: "M1L",
+    typeA: "seed",
+    typeB: "lose",
+    autoLabelA: "Hạt giống #5",
+    autoLabelB: "Thua M1 (M1L)"
+  });
+
+  const m4 = evalMatch("m4", seeds.m4_a || "1S", m2.loser, {
+    name: "Trận 4",
+    stage: "Nhánh Thua (Vòng 1)",
+    time: "18:00",
+    date: "24/10",
+    badgeA: "#6",
+    badgeB: "M2L",
+    typeA: "seed",
+    typeB: "lose",
+    autoLabelA: "Hạt giống #6",
+    autoLabelB: "Thua M2 (M2L)"
+  });
+
+  // 3. M6 (Chung kết Nhánh thắng)
+  const m6 = evalMatch("m6", m1.winner, m2.winner, {
+    name: "Trận 6",
+    stage: "Chung Kết Nhánh Thắng",
+    time: "18:00",
+    date: "25/10",
+    badgeA: "M1W",
+    badgeB: "M2W",
+    typeA: "win",
+    typeB: "win",
+    autoLabelA: "Thắng M1 (M1W)",
+    autoLabelB: "Thắng M2 (M2W)"
+  });
+
+  // 4. M5 (Bán kết Nhánh thua)
+  const m5 = evalMatch("m5", m3.winner, m4.winner, {
+    name: "Trận 5",
+    stage: "Bán Kết Nhánh Thua",
+    time: "14:00",
+    date: "25/10",
+    badgeA: "M3W",
+    badgeB: "M4W",
+    typeA: "win",
+    typeB: "win",
+    autoLabelA: "Thắng M3 (M3W)",
+    autoLabelB: "Thắng M4 (M4W)"
+  });
+
+  // 5. M7 (Chung kết Nhánh thua)
+  const m7 = evalMatch("m7", m6.loser, m5.winner, {
+    name: "Trận 7",
+    stage: "Chung Kết Nhánh Thua",
+    time: "12:00",
+    date: "07/11",
+    badgeA: "M6L",
+    badgeB: "M5W",
+    typeA: "lose",
+    typeB: "win",
+    autoLabelA: "Thua M6 (M6L)",
+    autoLabelB: "Thắng M5 (M5W)"
+  });
+
+  // 6. M8 (Chung kết tổng - GRAND FINAL)
+  const m8 = evalMatch("m8", m6.winner, m7.winner, {
+    name: "Trận 8",
+    stage: "Chung Kết Tổng (Grand Final)",
+    time: "18:30",
+    date: "07/11",
+    badgeA: "M6W",
+    badgeB: "M7W",
+    typeA: "win",
+    typeB: "win",
+    autoLabelA: "Vô địch Nhánh Thắng (M6W)",
+    autoLabelB: "Vô địch Nhánh Thua (M7W)"
+  });
+
+  const champion = m8.winner;
+  const runnerUp = m8.loser;
+  const thirdPlace = m7.loser;
+
+  return { m1, m2, m3, m4, m5, m6, m7, m8, champion, runnerUp, thirdPlace };
+}
+
+function renderPlayoffCard(m) {
+  const isPlayed = m.isPlayed;
+  const isWinA = isPlayed && m.winner === m.teamA;
+  const isWinB = isPlayed && m.winner === m.teamB;
+
+  function renderSlot(side, teamId, isWin, badgeText, badgeType, isOvr, autoLabel) {
+    const logo = teamId ? teamLogo(teamId) : "";
+    const teamObj = teamId ? state.teams.find(t => t.id === teamId) : null;
+    const teamName = teamObj ? teamObj.name : "";
+    const scoreVal = side === "a" ? (m.sa !== null ? m.sa : "") : (m.sb !== null ? m.sb : "");
+    const scoreClass = isWin ? "winner-score" : "";
+    const slotKey = `${m.key}_${side}`;
+
+    let badgeClass = "badge-seed";
+    if (badgeType === "win") badgeClass = "badge-win";
+    else if (badgeType === "lose") badgeClass = "badge-lose";
+
+    let selectHtml = "";
+    const isSeedSlot = m.key === "m1" || m.key === "m2" || (m.key === "m3" && side === "a") || (m.key === "m4" && side === "a");
+
+    if (isSeedSlot) {
+      const opts = state.teams.map(t => {
+        const sel = t.id === teamId ? "selected" : "";
+        return `<option value="${t.id}" ${sel}>${esc(t.name)} (${t.id})</option>`;
+      }).join("");
+      selectHtml = `<select class="playoff-select" data-slot="${slotKey}" title="Chọn đội hạt giống cho ô này">${opts}</select>`;
+    } else {
+      const isOverridden = isOvr;
+      let autoOptionText = `⚡ ${autoLabel}`;
+      if (teamId && !isOverridden) {
+        autoOptionText += ` • ${teamName}`;
+      } else if (!teamId && !isOverridden) {
+        autoOptionText += ` (Chưa xác định)`;
+      }
+      let opts = `<option value="auto" ${!isOverridden ? "selected" : ""}>${esc(autoOptionText)}</option>`;
+      opts += state.teams.map(t => {
+        const sel = isOverridden && teamId === t.id ? "selected" : "";
+        return `<option value="${t.id}" ${sel}>🎯 Chỉ định: ${esc(t.name)} (${t.id})</option>`;
+      }).join("");
+      selectHtml = `<select class="playoff-select ${isOverridden ? 'is-override' : ''}" data-slot="${slotKey}" title="Chọn đội cho ô này">${opts}</select>`;
+    }
+
+    const logoHtml = logo
+      ? `<img class="playoff-slot-logo" src="${esc(logo)}" alt="${esc(teamId)}" onerror="this.style.display='none'">`
+      : `<span class="playoff-slot-logo-placeholder">⚔️</span>`;
+
+    return `
+      <div class="playoff-team-slot ${isWin ? 'slot-winner' : (isPlayed ? 'slot-loser' : '')}">
+        <span class="playoff-badge ${badgeClass}" title="${esc(autoLabel)}">${esc(badgeText)}</span>
+        <div class="playoff-team-display">
+          ${logoHtml}
+          <div class="playoff-select-wrap">
+            ${selectHtml}
+          </div>
+        </div>
+        <div class="playoff-score-wrap">
+          <input type="number" min="0" max="4" class="playoff-score-input ${scoreClass}" data-m="${m.key}" data-side="${side}" id="playoff_score_${m.key}_${side}" value="${scoreVal}" placeholder="-">
+        </div>
+      </div>
+    `;
+  }
+
+  const slotAHtml = renderSlot("a", m.teamA, isWinA, m.badgeA, m.typeA, m.isOvrA, m.autoLabelA);
+  const slotBHtml = renderSlot("b", m.teamB, isWinB, m.badgeB, m.typeB, m.isOvrB, m.autoLabelB);
+
+  return `
+    <div class="playoff-card ${isPlayed ? 'is-played' : ''}" data-m="${m.key}">
+      <div class="playoff-card-head">
+        <div class="playoff-card-title">
+          <span class="m-code-pill">${esc(m.key.toUpperCase())}</span>
+          <span class="m-bo-pill">BO${m.bo}</span>
+          <span class="m-stage-text">${esc(m.stage)}</span>
+        </div>
+        <div class="playoff-card-actions">
+          <span class="m-time-pill">🕒 ${esc(m.time)} - ${esc(m.date)}</span>
+          <button type="button" class="btn-m-reset" data-reset="${m.key}" title="Đặt lại tỉ số trận này" ${isPlayed ? '' : 'style="opacity:0.35"'}>↺</button>
+        </div>
+      </div>
+      <div class="playoff-card-body">
+        ${slotAHtml}
+        ${slotBHtml}
+      </div>
+    </div>
+  `;
+}
+
+function renderChampionShowcase(r) {
+  if (r.champion) {
+    const champObj = state.teams.find(t => t.id === r.champion);
+    const champName = champObj ? champObj.name : r.champion;
+    const champLogo = teamLogo(r.champion);
+    const runnerObj = state.teams.find(t => t.id === r.runnerUp);
+    const runnerName = runnerObj ? runnerObj.name : (r.runnerUp || "Chưa xác định");
+    const thirdObj = state.teams.find(t => t.id === r.thirdPlace);
+    const thirdName = thirdObj ? thirdObj.name : (r.thirdPlace || "Chưa xác định");
+
+    return `
+      <div class="champion-podium-card champion-active">
+        <div class="podium-glow"></div>
+        <div class="podium-head">
+          <span class="podium-badge">🏆 NHÀ VÔ ĐỊCH ĐTDV MÙA ĐÔNG 2026</span>
+        </div>
+        <div class="podium-hero">
+          ${champLogo ? `<img class="podium-logo" src="${esc(champLogo)}" alt="${esc(champName)}">` : ''}
+          <div class="podium-champ-name">${esc(champName)}</div>
+          <div class="podium-champ-code">${esc(r.champion)}</div>
+        </div>
+        <div class="podium-ranks">
+          <div class="podium-rank-item silver">
+            <span class="rank-icon">🥈 Á Quân:</span>
+            <span class="rank-name">${esc(runnerName)}</span>
+          </div>
+          <div class="podium-rank-item bronze">
+            <span class="rank-icon">🥉 Hạng 3:</span>
+            <span class="rank-name">${esc(thirdName)}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="champion-podium-card champion-pending">
+      <div class="podium-head">
+        <span class="podium-badge dim">🏆 CÚP VÔ ĐỊCH ĐTDV 2026</span>
+      </div>
+      <div class="podium-hero-pending">
+        <div class="trophy-silhouette">🏆</div>
+        <div class="podium-waiting-title">Đang chờ xác định Nhà Vô Địch</div>
+        <div class="podium-waiting-desc">Điền kết quả các trận để xác định đội nâng cúp</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderPlayoff() {
+  const container = $("playoffBracket");
+  if (!container) return;
+
+  const activeEl = document.activeElement;
+  const isInput = activeEl && activeEl.classList.contains("playoff-score-input");
+  const activeM = isInput ? activeEl.dataset.m : null;
+  const activeSide = isInput ? activeEl.dataset.side : null;
+
+  const r = resolvePlayoffBracket(state.playoff);
+
+  container.innerHTML = `
+    <div class="playoff-bracket-grid">
+      <!-- CỘT 1: VÒNG 1 (KHỞI TRANH) -->
+      <div class="bracket-col col-r1">
+        <div class="bracket-col-header">
+          <span class="col-title">VÒNG 1 • KHỞI TRANH</span>
+          <span class="col-subtitle">23/10 – 24/10 • BO7</span>
+        </div>
+        
+        <div class="bracket-group">
+          <div class="group-label upper-label"><span>▲</span> NHÁNH THẮNG (UPPER)</div>
+          <div class="group-cards">
+            ${renderPlayoffCard(r.m1)}
+            ${renderPlayoffCard(r.m2)}
+          </div>
+        </div>
+
+        <div class="bracket-group">
+          <div class="group-label lower-label"><span>▼</span> NHÁNH THUA (LOWER)</div>
+          <div class="group-cards">
+            ${renderPlayoffCard(r.m3)}
+            ${renderPlayoffCard(r.m4)}
+          </div>
+        </div>
+      </div>
+
+      <!-- CỘT 2: BÁN KẾT -->
+      <div class="bracket-col col-r2">
+        <div class="bracket-col-header">
+          <span class="col-title">BÁN KẾT &amp; CK NHÁNH THẮNG</span>
+          <span class="col-subtitle">25/10 • BO7</span>
+        </div>
+
+        <div class="bracket-group">
+          <div class="group-label upper-label"><span>👑</span> CHUNG KẾT NHÁNH THẮNG</div>
+          <div class="group-cards">
+            ${renderPlayoffCard(r.m6)}
+          </div>
+        </div>
+
+        <div class="bracket-group">
+          <div class="group-label lower-label"><span>⚡</span> BÁN KẾT NHÁNH THUA</div>
+          <div class="group-cards">
+            ${renderPlayoffCard(r.m5)}
+          </div>
+        </div>
+      </div>
+
+      <!-- CỘT 3: CHUNG KẾT NHÁNH THUA -->
+      <div class="bracket-col col-r3">
+        <div class="bracket-col-header">
+          <span class="col-title">CHUNG KẾT NHÁNH THUA</span>
+          <span class="col-subtitle">07/11 • BO7</span>
+        </div>
+
+        <div class="bracket-group">
+          <div class="group-label lower-label"><span>🔥</span> TRANH VÉ GRAND FINAL</div>
+          <div class="group-cards">
+            ${renderPlayoffCard(r.m7)}
+          </div>
+        </div>
+      </div>
+
+      <!-- CỘT 4: CHUNG KẾT TỔNG (GRAND FINAL) -->
+      <div class="bracket-col col-r4">
+        <div class="bracket-col-header grand-final-header">
+          <span class="col-title">CHUNG KẾT TỔNG</span>
+          <span class="col-subtitle">18:30 - 07/11 • BO7</span>
+        </div>
+
+        <div class="bracket-group grand-final-group">
+          <div class="grand-final-banner">
+            <div class="gf-title">GRAND FINAL</div>
+            <div class="gf-subtitle">ĐẤU TRƯỜNG DANH VỌNG MÙA ĐÔNG 2026</div>
+          </div>
+          <div class="group-cards">
+            ${renderPlayoffCard(r.m8)}
+          </div>
+        </div>
+
+        <!-- CHAMPION SHOWCASE -->
+        ${renderChampionShowcase(r)}
+      </div>
+    </div>
+  `;
+
+  if (activeM && activeSide) {
+    const nextEl = $(`playoff_score_${activeM}_${activeSide}`);
+    if (nextEl) {
+      nextEl.focus();
+    }
+  }
+}
+
+let playoffListenersBound = false;
+function setupPlayoffListeners() {
+  if (playoffListenersBound) return;
+  playoffListenersBound = true;
+
+  const bracket = $("playoffBracket");
+  if (bracket) {
+    // 1. Nhập tỉ số
+    bracket.addEventListener("input", e => {
+      if (e.target.classList.contains("playoff-score-input")) {
+        const mKey = e.target.dataset.m;
+        const side = e.target.dataset.side;
+        const val = e.target.value.trim();
+        const num = val === "" ? null : Math.max(0, Math.min(4, Number(val)));
+        if (!state.playoff.matches[mKey]) state.playoff.matches[mKey] = { sa: null, sb: null };
+        if (side === "a") state.playoff.matches[mKey].sa = num;
+        else state.playoff.matches[mKey].sb = num;
+        save();
+        renderPlayoff();
+      }
+    });
+
+    // 2. Tự động bôi đen khi focus để nhập nhanh
+    bracket.addEventListener("focusin", e => {
+      if (e.target.classList.contains("playoff-score-input")) {
+        setTimeout(() => { try { e.target.select(); } catch(err){} }, 50);
+      }
+    });
+
+    // 3. Thay đổi đội trong ô
+    bracket.addEventListener("change", e => {
+      if (e.target.classList.contains("playoff-select")) {
+        const slot = e.target.dataset.slot;
+        const val = e.target.value;
+        const isSeedSlot = slot.startsWith("m1_") || slot.startsWith("m2_") || slot === "m3_a" || slot === "m4_a";
+
+        if (isSeedSlot) {
+          state.playoff.seeds[slot] = val;
+        } else {
+          if (val === "auto") {
+            delete state.playoff.overrides[slot];
+          } else {
+            state.playoff.overrides[slot] = val;
+          }
+        }
+        save();
+        renderPlayoff();
+      }
+    });
+
+    // 4. Reset tỉ số trận đấu riêng lẻ
+    bracket.addEventListener("click", e => {
+      const btn = e.target.closest(".btn-m-reset");
+      if (btn) {
+        const mKey = btn.dataset.reset;
+        if (mKey && state.playoff.matches[mKey]) {
+          state.playoff.matches[mKey].sa = null;
+          state.playoff.matches[mKey].sb = null;
+          save();
+          renderPlayoff();
+        }
+      }
+    });
+  }
+
+  // 5. Nút nạp Top 6 từ BXH Thực tế
+  if ($("btnPlayoffLoadReal")) {
+    $("btnPlayoffLoadReal").onclick = () => {
+      const topTeams = compute(realResults()).slice(0, 6);
+      if (topTeams.length >= 6) {
+        state.playoff.seeds.m1_a = topTeams[0].id;
+        state.playoff.seeds.m1_b = topTeams[3].id;
+        state.playoff.seeds.m2_a = topTeams[1].id;
+        state.playoff.seeds.m2_b = topTeams[2].id;
+        state.playoff.seeds.m3_a = topTeams[4].id;
+        state.playoff.seeds.m4_a = topTeams[5].id;
+        state.playoff.overrides = {};
+        save();
+        renderPlayoff();
+        say("Đã nạp Top 6 từ BXH Thực tế vào Play-offs!", "ok");
+      } else {
+        say("Không đủ 6 đội trên BXH để nạp.", "err");
+      }
+    };
+  }
+
+  // 6. Nút nạp Top 6 từ BXH Kịch bản
+  if ($("btnPlayoffLoadScn")) {
+    $("btnPlayoffLoadScn").onclick = () => {
+      const sc = activeSc();
+      const topTeams = compute(scenarioResults(sc)).slice(0, 6);
+      if (topTeams.length >= 6) {
+        state.playoff.seeds.m1_a = topTeams[0].id;
+        state.playoff.seeds.m1_b = topTeams[3].id;
+        state.playoff.seeds.m2_a = topTeams[1].id;
+        state.playoff.seeds.m2_b = topTeams[2].id;
+        state.playoff.seeds.m3_a = topTeams[4].id;
+        state.playoff.seeds.m4_a = topTeams[5].id;
+        state.playoff.overrides = {};
+        save();
+        renderPlayoff();
+        say("Đã nạp Top 6 từ Kịch bản vào Play-offs!", "ok");
+      } else {
+        say("Không đủ 6 đội trong kịch bản để nạp.", "err");
+      }
+    };
+  }
+
+  // 7. Nút đặt lại tất cả tỉ số trận đấu Playoff
+  if ($("btnPlayoffResetScores")) {
+    $("btnPlayoffResetScores").onclick = () => {
+      Object.keys(state.playoff.matches).forEach(k => {
+        state.playoff.matches[k].sa = null;
+        state.playoff.matches[k].sb = null;
+      });
+      save();
+      renderPlayoff();
+      say("Đã xóa tất cả tỉ số Play-offs (giữ nguyên các đội).", "ok");
+    };
+  }
+
+  // 8. Nút khôi phục nhánh Playoff về mặc định
+  if ($("btnPlayoffResetAll")) {
+    $("btnPlayoffResetAll").onclick = () => {
+      if (confirm("Khôi phục toàn bộ nhánh Play-offs về thiết lập mặc định ban đầu?")) {
+        state.playoff = defaultPlayoff();
+        save();
+        renderPlayoff();
+        say("Đã làm mới toàn bộ nhánh Play-offs.", "ok");
+      }
+    };
+  }
+}
+
 /* ---------- Form trận ---------- */
 function say(text, kind) { const m = $("msg"); m.textContent = text; m.className = "msg " + (kind || ""); }
 function readForm() {
@@ -1792,7 +2390,8 @@ function renderAll() {
   renderTeamSelects();
   renderWeekSelects();
   if (tab === "real") { renderStandings(); renderBase(); renderMatches(); }
-  else renderScenario();
+  else if (tab === "scn") { renderScenario(); }
+  else if (tab === "playoff") { renderPlayoff(); }
 }
 function initUI() {
   $("topN").value = state.settings.top;
@@ -1801,6 +2400,7 @@ function initUI() {
   $("legsDone").value = state.settings.legsDone;
   $("genBo").value = String(state.settings.defaultBo);
   $("aiOut").value = "";
+  setupPlayoffListeners();
   renderAll();
   if (tab === "scn") $("aiOut").value = buildAIText();
 }

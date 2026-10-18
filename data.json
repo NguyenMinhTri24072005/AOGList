@@ -768,8 +768,8 @@
       "week": 8,
       "teamA": "TS",
       "teamB": "FPT",
-      "scoreA": null,
-      "scoreB": null,
+      "scoreA": 0,
+      "scoreB": 3,
       "bo": 5,
       "date": "2026-10-17T13:00:00"
     },
@@ -779,8 +779,8 @@
       "week": 8,
       "teamA": "SGP",
       "teamB": "RRQ",
-      "scoreA": null,
-      "scoreB": null,
+      "scoreA": 3,
+      "scoreB": 1,
       "bo": 5,
       "date": "2026-10-17T16:00:00"
     },
@@ -790,8 +790,8 @@
       "week": 8,
       "teamA": "BOOM",
       "teamB": "FL",
-      "scoreA": null,
-      "scoreB": null,
+      "scoreA": 2,
+      "scoreB": 3,
       "bo": 5,
       "date": "2026-10-17T19:30:00"
     },
@@ -801,8 +801,8 @@
       "week": 8,
       "teamA": "TS",
       "teamB": "BOX",
-      "scoreA": null,
-      "scoreB": null,
+      "scoreA": 1,
+      "scoreB": 3,
       "bo": 5,
       "date": "2026-10-18T13:00:00"
     },
@@ -812,8 +812,8 @@
       "week": 8,
       "teamA": "1S",
       "teamB": "GAM",
-      "scoreA": null,
-      "scoreB": null,
+      "scoreA": 3,
+      "scoreB": 1,
       "bo": 5,
       "date": "2026-10-18T16:00:00"
     },
@@ -823,8 +823,8 @@
       "week": 8,
       "teamA": "FPT",
       "teamB": "SGP",
-      "scoreA": null,
-      "scoreB": null,
+      "scoreA": 3,
+      "scoreB": 2,
       "bo": 5,
       "date": "2026-10-18T19:30:00"
     },
@@ -851,15 +851,17 @@
   ],
   "scenarios": [
     {
-      "id": "default",
-      "name": "Kịch bản 1",
-      "picks": {}
+      "id": "jkk0w6mu",
+      "name": "kb1",
+      "picks": {
+        "m_70": "3-2"
+      }
     }
   ],
-  "active": "default",
+  "active": "jkk0w6mu",
   "settings": {
     "top": 6,
-    "tiebreak": "diff",
+    "tiebreak": "diff_h2h",
     "legsTotal": 2,
     "legsDone": 1,
     "defaultBo": 5
