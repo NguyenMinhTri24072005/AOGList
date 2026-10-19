@@ -2184,7 +2184,30 @@ function setupPlayoffListeners() {
     }, { passive: true });
   }
 
-  // 5. Nút nạp Top 6 từ BXH Thực tế
+  // 5. Bật/Tắt Chế độ Stream tràn màn hình 16:9
+  const toggleStreamMode = () => {
+    document.body.classList.toggle("stream-mode");
+    const isStream = document.body.classList.contains("stream-mode");
+    if ($("btnPlayoffStreamMode")) {
+      $("btnPlayoffStreamMode").classList.toggle("on", isStream);
+    }
+    requestAnimationFrame(() => drawPlayoffLines());
+    setTimeout(() => drawPlayoffLines(), 60);
+  };
+
+  if ($("btnPlayoffStreamMode")) {
+    $("btnPlayoffStreamMode").onclick = toggleStreamMode;
+  }
+  if ($("btnExitStreamMode")) {
+    $("btnExitStreamMode").onclick = toggleStreamMode;
+  }
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && document.body.classList.contains("stream-mode")) {
+      toggleStreamMode();
+    }
+  });
+
+  // 6. Nút nạp Top 6 từ BXH Thực tế
   if ($("btnPlayoffLoadReal")) {
     $("btnPlayoffLoadReal").onclick = () => {
       const topTeams = compute(realResults()).slice(0, 6);

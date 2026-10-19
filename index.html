@@ -403,6 +403,9 @@
             <span class="tip-inline">Điền tỉ số để hệ thống tự động đưa đội thắng &amp; đội thua vào các nhánh tiếp theo. Bạn có thể tự do chọn đội cho bất kỳ ô nào.</span>
           </div>
           <div class="playoff-actions-group">
+            <button id="btnPlayoffStreamMode" class="ghost sm" type="button" title="Bật/Tắt chế độ Stream (khớp trọn vẹn 1 khung hình 16:9)">
+              <span>📺</span> Chế độ Stream
+            </button>
             <button id="btnPlayoffLoadReal" class="primary sm" type="button" title="Tự động lấy Top 6 đội từ Bảng xếp hạng thực tế nạp vào 6 vị trí hạt giống">
               <span>⚡</span> Nạp Top 6 từ BXH
             </button>
@@ -418,6 +421,9 @@
           </div>
         </div>
       </section>
+
+      <!-- Nút thoát nhanh khi đang ở Chế độ Stream -->
+      <button id="btnExitStreamMode" class="btn-exit-stream" type="button" title="Thoát chế độ Stream">✕ Thoát Chế độ Stream</button>
 
       <!-- KHUNG NHÁNH ĐẤU BRACKET VIEWPORT -->
       <section class="card playoff-bracket-card">
