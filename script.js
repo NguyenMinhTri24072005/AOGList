@@ -38,11 +38,11 @@ const DEFAULT_SPECIAL_WEEKS = [
 function defaultPlayoff() {
   let seeds = {
     m1_a: "SGP",
-    m1_b: "FL",
+    m1_b: "BOOM",
     m2_a: "FPT",
-    m2_b: "BOOM",
-    m3_a: "GAM",
-    m4_a: "BOX"
+    m2_b: "FL",
+    m3_a: "BOX",
+    m4_a: "GAM"
   };
   try {
     if (typeof state !== "undefined" && state && Array.isArray(state.matches) && state.matches.length) {
@@ -1417,56 +1417,56 @@ function resolvePlayoffBracket(po) {
   }
 
   // 1. M1 & M2 (Nhánh thắng Vòng 1)
-  const m1 = evalMatch("m1", seeds.m1_a || "SGP", seeds.m1_b || "FL", {
+  const m1 = evalMatch("m1", seeds.m1_a || "SGP", seeds.m1_b || "BOOM", {
     name: "Trận 1",
     stage: "Nhánh Thắng (Vòng 1)",
     time: "14:00",
     date: "23/10",
     badgeA: "#1",
-    badgeB: "#4",
+    badgeB: "#3",
     typeA: "seed",
     typeB: "seed",
     autoLabelA: "Hạt giống #1",
-    autoLabelB: "Hạt giống #4"
+    autoLabelB: "Hạt giống #3"
   });
 
-  const m2 = evalMatch("m2", seeds.m2_a || "FPT", seeds.m2_b || "BOOM", {
+  const m2 = evalMatch("m2", seeds.m2_a || "FPT", seeds.m2_b || "FL", {
     name: "Trận 2",
     stage: "Nhánh Thắng (Vòng 1)",
     time: "18:00",
     date: "23/10",
     badgeA: "#2",
-    badgeB: "#3",
+    badgeB: "#4",
     typeA: "seed",
     typeB: "seed",
     autoLabelA: "Hạt giống #2",
-    autoLabelB: "Hạt giống #3"
+    autoLabelB: "Hạt giống #4"
   });
 
   // 2. M3 & M4 (Nhánh thua Vòng 1)
-  const m3 = evalMatch("m3", seeds.m3_a || "GAM", m1.loser, {
+  const m3 = evalMatch("m3", seeds.m3_a || "BOX", m1.loser, {
     name: "Trận 3",
     stage: "Nhánh Thua (Vòng 1)",
     time: "14:00",
     date: "24/10",
-    badgeA: "#5",
+    badgeA: "#6",
     badgeB: "M1L",
     typeA: "seed",
     typeB: "lose",
-    autoLabelA: "Hạt giống #5",
+    autoLabelA: "Hạt giống #6",
     autoLabelB: "Thua M1 (M1L)"
   });
 
-  const m4 = evalMatch("m4", seeds.m4_a || "BOX", m2.loser, {
+  const m4 = evalMatch("m4", seeds.m4_a || "GAM", m2.loser, {
     name: "Trận 4",
     stage: "Nhánh Thua (Vòng 1)",
     time: "18:00",
     date: "24/10",
-    badgeA: "#6",
+    badgeA: "#5",
     badgeB: "M2L",
     typeA: "seed",
     typeB: "lose",
-    autoLabelA: "Hạt giống #6",
+    autoLabelA: "Hạt giống #5",
     autoLabelB: "Thua M2 (M2L)"
   });
 

@@ -1804,7 +1804,7 @@ textarea {
 .playoff-bracket-wrap {
   position: relative;
   display: inline-block;
-  min-width: 1260px;
+  min-width: 1340px;
   width: 100%;
 }
 
@@ -1823,9 +1823,9 @@ textarea {
   position: relative;
   z-index: 2;
   display: grid;
-  grid-template-columns: repeat(4, minmax(290px, 1fr));
+  grid-template-columns: repeat(4, minmax(310px, 1fr));
   gap: 36px;
-  min-width: 1220px;
+  min-width: 1300px;
   padding: 8px 10px 24px;
 }
 
@@ -1915,19 +1915,19 @@ textarea {
 
 /* Canh chỉnh vị trí các cột trong Playoff để các đường nối đối xứng, đẹp mắt */
 .bracket-group.group-r2-upper {
-  margin-top: 60px;
+  margin-top: 86px;
 }
 
 .bracket-group.group-r2-lower {
-  margin-top: 140px;
+  margin-top: 190px;
 }
 
 .bracket-col-spacer.group-r3-spacer {
-  height: 366px;
+  height: 418px;
 }
 
 .grand-final-group.group-r4-gf {
-  margin-top: 175px;
+  margin-top: 230px;
 }
 
 /* Thẻ trận đấu Playoff */
@@ -2038,36 +2038,38 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
-  padding: 4px 6px;
-  border-radius: 6px;
-  background: rgba(26, 37, 63, 0.4);
-  border: 1px solid transparent;
+  gap: 8px;
+  padding: 5px 8px;
+  min-height: 52px;
+  border-radius: 8px;
+  background: rgba(26, 37, 63, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   transition: all 0.2s ease;
 }
 
 .playoff-team-slot.slot-winner {
-  background: linear-gradient(90deg, rgba(16, 185, 129, 0.15) 0%, rgba(59, 130, 246, 0.1) 100%);
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.16) 0%, rgba(59, 130, 246, 0.12) 100%);
   border-color: rgba(16, 185, 129, 0.4);
 }
 
 .playoff-team-slot.slot-loser {
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
 .playoff-badge {
   font-family: var(--font-display);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
-  min-width: 32px;
-  height: 20px;
+  min-width: 36px;
+  height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: 6px;
   flex-shrink: 0;
   text-align: center;
   letter-spacing: 0.5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
 }
 
 .playoff-badge.badge-seed {
@@ -2088,35 +2090,57 @@ textarea {
 .playoff-team-display {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex: 1;
   min-width: 0;
 }
 
 .playoff-slot-logo-wrap {
-  width: 22px;
-  height: 22px;
+  width: 40px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  background: rgba(10, 15, 26, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 3px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s ease;
+}
+
+.playoff-team-slot.slot-winner .playoff-slot-logo-wrap {
+  border-color: rgba(16, 185, 129, 0.45);
+  background: rgba(16, 185, 129, 0.12);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
 }
 
 .playoff-slot-logo {
-  width: 22px;
-  height: 22px;
+  width: 34px;
+  height: 34px;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
   flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.playoff-team-slot:hover .playoff-slot-logo {
+  transform: scale(1.08);
 }
 
 .playoff-slot-logo-placeholder {
-  width: 22px;
-  height: 22px;
+  width: 40px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 18px;
+  color: var(--mute);
   flex-shrink: 0;
+  opacity: 0.65;
 }
 
 .playoff-select-wrap {
@@ -2127,12 +2151,13 @@ textarea {
 .playoff-select {
   width: 100%;
   max-width: 100%;
+  height: 34px;
   background: rgba(10, 15, 26, 0.85);
   color: #f1f5f9;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 4px;
-  padding: 3px 6px;
-  font-size: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
@@ -2158,7 +2183,7 @@ textarea {
 .playoff-select.is-override {
   border-color: #f59e0b;
   color: #fef08a;
-  background: rgba(245, 158, 11, 0.12);
+  background: rgba(245, 158, 11, 0.14);
 }
 
 .playoff-score-wrap {
@@ -2169,15 +2194,15 @@ textarea {
 }
 
 .playoff-score-input {
-  width: 32px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   text-align: center;
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 800;
   background: #090e18;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
   color: #f1f5f9;
   outline: none;
   transition: all 0.15s ease;
