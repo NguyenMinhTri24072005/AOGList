@@ -2047,6 +2047,7 @@ function renderPlayoff() {
 
   requestAnimationFrame(() => drawPlayoffLines());
   setTimeout(() => drawPlayoffLines(), 60);
+  setTimeout(() => drawPlayoffLines(), 180);
 }
 
 let playoffListenersBound = false;
@@ -2193,6 +2194,7 @@ function setupPlayoffListeners() {
     }
     requestAnimationFrame(() => drawPlayoffLines());
     setTimeout(() => drawPlayoffLines(), 60);
+    setTimeout(() => drawPlayoffLines(), 200);
   };
 
   if ($("btnPlayoffStreamMode")) {

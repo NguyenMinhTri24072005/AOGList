@@ -1848,6 +1848,7 @@ body.stream-mode .playoff-bracket-card {
 .playoff-bracket-card {
   flex: 1;
   min-height: 0;
+  width: 100%;
   padding: 4px 6px 8px;
   display: flex;
   flex-direction: column;
@@ -1856,6 +1857,7 @@ body.stream-mode .playoff-bracket-card {
   border-radius: var(--radius-lg);
   position: relative;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .playoff-scroll-wrap {
@@ -1864,15 +1866,35 @@ body.stream-mode .playoff-bracket-card {
   height: 100%;
   overflow-x: auto;
   overflow-y: auto;
-  padding: 2px 6px 8px;
+  padding: 6px 12px;
+  box-sizing: border-box;
   -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+}
+
+.playoff-bracket {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  width: 100%;
 }
 
 .playoff-bracket-wrap {
   position: relative;
   display: block;
   min-width: 1180px;
+  max-width: 1680px;
   width: 100%;
+  margin: auto;
+}
+
+@media (max-width: 1200px) {
+  .playoff-bracket-wrap {
+    margin-left: 0;
+    margin-right: 0;
+  }
 }
 
 .playoff-bracket-svg {
