@@ -1716,14 +1716,20 @@ textarea {
    VÒNG PLAY-OFFS (DOUBLE ELIMINATION BRACKET)
    ========================================================================== */
 #viewPlayoff {
-  display: flex;
-#viewPlayoff {
+  display: flex !important;
+  flex-direction: column !important;
+  grid-template-columns: none !important;
+  grid-template-rows: none !important;
   flex: 1;
-  display: flex;
-  flex-direction: column;
+  width: 100%;
   gap: 6px;
   padding: 4px 10px 8px;
   min-height: 0;
+  box-sizing: border-box;
+}
+
+#viewPlayoff.hide {
+  display: none !important;
 }
 
 .playoff-header-card {
@@ -1864,8 +1870,8 @@ body.stream-mode .playoff-bracket-card {
 
 .playoff-bracket-wrap {
   position: relative;
-  display: inline-block;
-  min-width: 1340px;
+  display: block;
+  min-width: 1180px;
   width: 100%;
 }
 
@@ -1884,9 +1890,9 @@ body.stream-mode .playoff-bracket-card {
   position: relative;
   z-index: 2;
   display: grid;
-  grid-template-columns: repeat(4, minmax(310px, 1fr));
-  gap: 32px;
-  min-width: 1300px;
+  grid-template-columns: repeat(4, minmax(260px, 1fr));
+  gap: 20px;
+  min-width: 1180px;
   padding: 4px 8px 12px;
 }
 
@@ -2476,6 +2482,10 @@ body.stream-mode .playoff-bracket-card {
   }
 
   #viewPlayoff {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: none !important;
+    grid-template-rows: none !important;
     height: 100%;
     min-height: 0;
     overflow: hidden;
@@ -2521,6 +2531,15 @@ body.stream-mode .playoff-bracket-card {
   main {
     grid-template-columns: 1fr !important;
     grid-template-rows: auto !important;
+    height: auto;
+    overflow: visible;
+  }
+
+  #viewPlayoff {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: none !important;
+    grid-template-rows: none !important;
     height: auto;
     overflow: visible;
   }
